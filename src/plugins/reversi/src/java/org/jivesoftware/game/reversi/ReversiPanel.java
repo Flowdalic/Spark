@@ -78,7 +78,7 @@ public class ReversiPanel extends JPanel {
     /**
      * Creates a new Reversi panel.
      *
-     * @param connection Connection associated.
+     * @param connection XMPPConnection associated.
      * @param gameID Game ID number
      * @param startingPlayer Whether we are the starting player or not
      * @param opponentJID JID of opponent

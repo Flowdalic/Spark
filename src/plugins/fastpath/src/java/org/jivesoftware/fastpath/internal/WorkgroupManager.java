@@ -42,7 +42,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.jivesoftware.fastpath.resources.FastpathRes;
-import org.jivesoftware.smack.Connection;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
@@ -402,7 +402,7 @@ public class WorkgroupManager {
     private class InviteListener implements RoomInvitationListener {
         // Add own invitation listener
     	@Override
-        public boolean handleInvitation(final Connection conn, final String room, final String inviter, final String reason, final String password, final Message message) {
+        public boolean handleInvitation(final XMPPConnection conn, final String room, final String inviter, final String reason, final String password, final Message message) {
             invites.add(inviter);
 
             if (message.getExtension("workgroup", "http://jabber.org/protocol/workgroup") != null) {

@@ -25,9 +25,9 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.PrivateDataManager;
-import org.jivesoftware.smackx.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.packet.DiscoverItems;
+import org.jivesoftware.smackx.iqprivate.PrivateDataManager;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.disco.packet.DiscoverItems;
 import org.jivesoftware.spark.ui.PresenceListener;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.manager.Features;
@@ -76,13 +76,13 @@ public final class SessionManager implements ConnectionListener {
         this.userBareAddress = StringUtils.parseBareAddress(connection.getUser());
 
         // create workgroup session
-        personalDataManager = new PrivateDataManager(getConnection());
+        personalDataManager = PrivateDataManager.getInstanceFor(getConnection());
 
         // Discover items
         discoverItems();
 
 
-        ProviderManager.getInstance().addExtensionProvider("event", "http://jabber.org/protocol/disco#info", new Features.Provider());
+        ProviderManager.addExtensionProvider("event", "http://jabber.org/protocol/disco#info", new Features.Provider());
     }
 
     /**
@@ -93,7 +93,7 @@ public final class SessionManager implements ConnectionListener {
         try {
             discoverItems = disco.discoverItems(SparkManager.getConnection().getServiceName());
         }
-        catch (XMPPException e) {
+        catch (Exception e) {
             Log.error(e);
             discoverItems = new DiscoverItems();
         }
@@ -150,7 +150,7 @@ public final class SessionManager implements ConnectionListener {
                 final Presence presence = new Presence(Presence.Type.unavailable);
                 changePresence(presence);
 
-                Log.debug("Connection closed on error.: " + ex.getMessage());
+                Log.debug("XMPPConnection closed on error.: " + ex.getMessage());
             }
         });
     }

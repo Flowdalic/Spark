@@ -214,7 +214,7 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
 
         addToolbar();
 
-        // Add Connection Listener
+        // Add XMPPConnection Listener
         SparkManager.getConnection().addConnectionListener(this);
 
         // Add Focus Listener
@@ -844,7 +844,7 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
 
         textScroller.getViewport().remove(transcriptWindow);
 
-        // Remove Connection Listener
+        // Remove XMPPConnection Listener
         SparkManager.getConnection().removeConnectionListener(this);
         getTranscriptWindow().setTransferHandler(null);
         getChatInputEditor().setTransferHandler(null);

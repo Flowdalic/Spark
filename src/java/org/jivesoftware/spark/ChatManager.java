@@ -26,10 +26,9 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.ChatState;
-import org.jivesoftware.smackx.ChatStateListener;
-import org.jivesoftware.smackx.Form;
+import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.xdata.Form;
 import org.jivesoftware.spark.component.tabbedPane.SparkTab;
 import org.jivesoftware.spark.decorator.DefaultTabHandler;
 import org.jivesoftware.spark.ui.ChatContainer;
@@ -151,7 +150,7 @@ public class ChatManager implements ChatManagerListener {
         // Add Default Chat Room Decorator
         addSparkTabHandler(new DefaultTabHandler());
         // Add a Message Handler        
-        SparkManager.getConnection().getChatManager().addChatListener(this);
+        org.jivesoftware.smack.ChatManager.getInstanceFor(SparkManager.getConnection()).addChatListener(this);
     }
 
 
@@ -287,7 +286,7 @@ public class ChatManager implements ChatManagerListener {
             // an instant room
             chatRoom.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
         }
-        catch (XMPPException e1) {
+        catch (Exception e1) {
             Log.error("Unable to send conference room chat configuration form.", e1);
             return null;
         }
@@ -505,7 +504,7 @@ public class ChatManager implements ChatManagerListener {
                     conferenceService = col.iterator().next();
                 }
             }
-            catch (XMPPException e) {
+            catch (Exception e) {
                 Log.error(e);
             }
         }

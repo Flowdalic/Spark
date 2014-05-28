@@ -42,7 +42,7 @@ import org.jivesoftware.resource.Default;
 import org.jivesoftware.resource.Res;
 import org.jivesoftware.resource.SparkRes;
 import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.Connection;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPException;
@@ -269,7 +269,7 @@ public class ChatRoomImpl extends ChatRoom {
     }    
     
     private void sendChatState(ChatState state) {
-    	Connection connection = SparkManager.getConnection();
+    	XMPPConnection connection = SparkManager.getConnection();
     	boolean connected = connection.isConnected();
 		if (connected) {
 			Chat chat = connection.getChatManager().createChat(getParticipantJID(), null);

@@ -31,7 +31,7 @@ import java.util.Vector;
 
 import javax.media.format.AudioFormat;
 import javax.media.format.VideoFormat;
-import javax.sdp.Connection;
+import javax.sdp.XMPPConnection;
 import javax.sdp.Media;
 import javax.sdp.MediaDescription;
 import javax.sdp.Origin;
@@ -157,7 +157,7 @@ public class JmfMediaManager {
                     "Failed to extract media descriptions from provided session description!",
                     ex);
         }
-        Connection sessionConnection = sessionDescription.getConnection();
+        XMPPConnection sessionConnection = sessionDescription.getConnection();
         String sessionRemoteAddress = null;
         if (sessionConnection != null) {
             try {
@@ -225,7 +225,7 @@ public class JmfMediaManager {
 
             }
 
-            Connection mediaConnection = mediaDescription.getConnection();
+            XMPPConnection mediaConnection = mediaDescription.getConnection();
             String mediaRemoteAddress = null;
             if (mediaConnection == null) {
                 if (sessionConnection == null) {
@@ -323,7 +323,7 @@ public class JmfMediaManager {
                     "Failed to extract media descriptions from provided session description!",
                     ex);
         }
-        Connection sessionConnection = sessionDescription.getConnection();
+        XMPPConnection sessionConnection = sessionDescription.getConnection();
         String sessionRemoteAddress = null;
         if (sessionConnection != null) {
             try {
@@ -391,7 +391,7 @@ public class JmfMediaManager {
 
             }
 
-            Connection mediaConnection = mediaDescription.getConnection();
+            XMPPConnection mediaConnection = mediaDescription.getConnection();
             String mediaRemoteAddress = null;
             if (mediaConnection == null) {
                 if (sessionConnection == null) {
@@ -530,7 +530,7 @@ public class JmfMediaManager {
             // "s=-"
             SessionName s = sdpFactory.createSessionName("<SIPmack>");
             // c=
-            Connection c = sdpFactory.createConnection("IN", addrType,
+            XMPPConnection c = sdpFactory.createConnection("IN", addrType,
                     publicIpAddress.getHostAddress());
             // "t=0 0"
             TimeDescription t = sdpFactory.createTimeDescription();
@@ -611,7 +611,7 @@ public class JmfMediaManager {
                     .replace(' ', '_'), 20109217, 2, "IN", addrType,
                     publicIpAddress.getHostAddress());
             SessionName s = sdpFactory.createSessionName("<SparkPhone>");
-            Connection c = sdpFactory.createConnection("IN", addrType,
+            XMPPConnection c = sdpFactory.createConnection("IN", addrType,
                     publicIpAddress.getHostAddress());
             TimeDescription t = sdpFactory.createTimeDescription();
             Vector<TimeDescription> timeDescs = new Vector<TimeDescription>();

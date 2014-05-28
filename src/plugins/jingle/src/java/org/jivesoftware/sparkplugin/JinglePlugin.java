@@ -43,7 +43,7 @@ import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.JingleSessionRequest;
@@ -179,7 +179,7 @@ public class JinglePlugin implements Plugin, Phone, ConnectionListener {
         if (jingleManager == null) {
             if (readyToConnect)
             {
-        	Log.error("Unable to resolve Jingle Connection (Host: "+stunServer+" Port: "+stunPort+")");
+        	Log.error("Unable to resolve Jingle XMPPConnection (Host: "+stunServer+" Port: "+stunPort+")");
             }
             return;
             
