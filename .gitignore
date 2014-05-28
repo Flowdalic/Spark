@@ -7,8 +7,6 @@ hs_err_pid*
 
 # Eclipse ignores
 .settings/
-.classpath
-.project
 bin/
 .loadpath
 *.launch
