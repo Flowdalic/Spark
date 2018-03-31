@@ -110,7 +110,7 @@ public class BuzzPlugin implements Plugin {
 
     private void shakeWindow(Message message) {
 
-	String bareJID = XmppStringUtils.parseBareJid(message.getFrom());
+	String bareJID = XmppStringUtils.parseBareJid(message.getFrom().toString());
 	ContactItem contact = SparkManager.getWorkspace().getContactList()
 		.getContactItemByJID(bareJID);
 	String nickname = XmppStringUtils.parseLocalpart(bareJID);

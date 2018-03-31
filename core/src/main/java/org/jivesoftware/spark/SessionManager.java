@@ -132,8 +132,8 @@ public final class SessionManager implements ConnectionListener {
      *
      * @param address the address of the server.
      */
-    public void setServerAddress(String address) {
-        this.serverAddress = address;
+    public void setServerAddress(CharSequence address) {
+        this.serverAddress = address.toString();
     }
 
     /**
@@ -226,8 +226,8 @@ public final class SessionManager implements ConnectionListener {
      *
      * @param jid the jid of the current Spark user.
      */
-    public void setJID(String jid) {
-        this.JID = jid;
+    public void setJID(CharSequence jid) {
+        this.JID = jid.toString();
     }
 
     /**

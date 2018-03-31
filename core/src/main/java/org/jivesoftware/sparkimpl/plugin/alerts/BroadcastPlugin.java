@@ -206,7 +206,8 @@ public class BroadcastPlugin extends SparkTabHandler implements Plugin, StanzaLi
         return false;
     }
 
-    public void processPacket(final Stanza stanza) {
+    @Override
+    public void processStanza(final Stanza stanza) {
         SwingUtilities.invokeLater( () -> {
             try {
                 final Message message = (Message)stanza;
@@ -226,7 +227,7 @@ public class BroadcastPlugin extends SparkTabHandler implements Plugin, StanzaLi
                 }
                 else {
                     String host = SparkManager.getSessionManager().getServerAddress();
-                    String from = stanza.getFrom() != null ? stanza.getFrom() : "";
+                    String from = stanza.getFrom() != null ? stanza.getFrom().toString() : "";
                     if (host.equalsIgnoreCase(from) || !ModelUtil.hasLength(from)) {
                         showAlert((Message)stanza);
                     }
@@ -263,7 +264,7 @@ public class BroadcastPlugin extends SparkTabHandler implements Plugin, StanzaLi
 
         buf.append(body);
 
-        String from = message.getFrom() != null ? message.getFrom() : "";
+        String from = message.getFrom() != null ? message.getFrom().toString() : "";
 
         final TranscriptWindow window = new TranscriptWindow();
         window.insertNotificationMessage(buf.toString(), ChatManager.TO_COLOR);
@@ -335,7 +336,7 @@ public class BroadcastPlugin extends SparkTabHandler implements Plugin, StanzaLi
 	//m.setFrom(name +" "+broadcasttype);
         m.setFrom(nickname+" - "+broadcasttype);
 
-	chatRoom.getTranscriptWindow().insertMessage(m.getFrom(), message, ChatManager.FROM_COLOR);
+	chatRoom.getTranscriptWindow().insertMessage(m.getFrom().toString(), message, ChatManager.FROM_COLOR);
 	chatRoom.addToTranscript(m,true);
 	chatRoom.increaseUnreadMessageCount();
 	broadcastRooms.add(chatRoom);
@@ -446,7 +447,7 @@ public class BroadcastPlugin extends SparkTabHandler implements Plugin, StanzaLi
      */
     private void broadcastInChat(Message message)
     {
-	String from = message.getFrom() != null ? message.getFrom() : "";
+	String from = message.getFrom() != null ? message.getFrom().toString() : "";
 	ChatManager chatManager = SparkManager.getChatManager();
         ChatContainer container = chatManager.getChatContainer();
 

@@ -133,7 +133,7 @@ public class ChatRoomDecorator
             request.setTo("httpfileupload." + SparkManager.getSessionManager().getServerAddress());
             request.setType(IQ.Type.get);
 
-            PacketCollector collector = SparkManager.getConnection().createPacketCollector(new PacketIDFilter(request.getPacketID()));
+            StanzaCollector collector = SparkManager.getConnection().createStanzaCollector(new PacketIDFilter(request.getPacketID()));
 
             SparkManager.getConnection().sendPacket(request);
 

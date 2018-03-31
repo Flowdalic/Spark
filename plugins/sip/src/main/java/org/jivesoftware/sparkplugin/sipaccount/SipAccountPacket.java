@@ -167,7 +167,7 @@ public class SipAccountPacket extends IQ {
         sp.setTo("sipark." + connection.getServiceName());
         sp.setType(IQ.Type.get);
 
-        PacketCollector collector = connection.createPacketCollector(new PacketIDFilter(sp.getPacketID()));
+        StanzaCollector collector = connection.createStanzaCollector(new PacketIDFilter(sp.getPacketID()));
         connection.sendStanza(sp);
 
         SipAccountPacket response = (SipAccountPacket)collector.nextResult(SmackConfiguration.getDefaultPacketReplyTimeout());
@@ -198,8 +198,8 @@ public class SipAccountPacket extends IQ {
         sp.setType(IQ.Type.set);
         sp.setContent(register.name());
 
-        PacketCollector collector = connection
-                .createPacketCollector(new PacketIDFilter(sp.getPacketID()));
+        StanzaCollector collector = connection
+                .createStanzaCollector(new PacketIDFilter(sp.getPacketID()));
         connection.sendStanza(sp);
 
         SipAccountPacket response = (SipAccountPacket)collector

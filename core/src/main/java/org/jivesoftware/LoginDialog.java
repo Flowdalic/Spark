@@ -24,6 +24,7 @@ import org.jivesoftware.resource.Default;
 import org.jivesoftware.resource.Res;
 import org.jivesoftware.resource.SparkRes;
 import org.jivesoftware.smack.*;
+import org.jivesoftware.smack.ConnectionConfiguration.DnssecMode;
 import org.jivesoftware.smack.parsing.ExceptionLoggingCallback;
 import org.jivesoftware.smack.proxy.ProxyInfo;
 import org.jivesoftware.smack.sasl.javax.SASLExternalMechanism;
@@ -53,6 +54,10 @@ import org.jivesoftware.sparkimpl.plugin.layout.LayoutSettingsManager;
 import org.jivesoftware.sparkimpl.settings.JiveInfo;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.naming.NamingException;
@@ -253,16 +258,22 @@ public class LoginDialog {
             }
         }
 
+        DomainBareJid xmppDomain;
+        try {
+            xmppDomain = JidCreate.domainBareFrom(loginServer);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
         final XMPPTCPConnectionConfiguration.Builder builder = XMPPTCPConnectionConfiguration.builder()
                 .setUsernameAndPassword(loginUsername, loginPassword)
-                .setServiceName(loginServer)
+                .setXmppDomain(xmppDomain)
                 .setPort(port)
                 .setSendPresence(false)
                 .setCompressionEnabled(localPref.isCompressionEnabled())
                 .setSecurityMode( securityMode );
                 
         if ( securityMode != ConnectionConfiguration.SecurityMode.disabled && localPref.isDisableHostnameVerification()) {
-            TLSUtils.disableHostnameVerificationForTlsCertificicates(builder);
+            TLSUtils.disableHostnameVerificationForTlsCertificates(builder);
         }
         if ( localPref.isDebuggerEnabled()) {
             builder.setDebuggerEnabled( true );
@@ -300,7 +311,7 @@ public class LoginDialog {
                 // SMACK 4.1.9 does not support XEP-0368, and does not apply a port change, if the host is not changed too.
                 // Here, we force the host to be set (by doing a DNS lookup), and force the port to 5223 (which is the
                 // default 'old-style' SSL port).
-                builder.setHost( DNSUtil.resolveXMPPDomain( loginServer, null ).get( 0 ).getFQDN() );
+                builder.setHost( DNSUtil.resolveXMPPServiceDomain( loginServer, null, DnssecMode.disabled ).get( 0 ).getFQDN() );
                 builder.setPort( 5223 );
             }
             SparkSSLContext.Options options;
@@ -1124,7 +1135,7 @@ public class LoginDialog {
                         {
                             connection.connect();
                         }
-                        catch ( IOException | SmackException | XMPPException e )
+                        catch ( IOException | SmackException | XMPPException | InterruptedException e )
                         {
                             exception[ 0 ] = e;
                         }
@@ -1141,7 +1152,9 @@ public class LoginDialog {
 
                 if ( localPref.isLoginAnonymously() && !localPref.isSSOEnabled() )
                 {
-                    ( (XMPPTCPConnection) connection ).loginAnonymously();
+					// TODO: Anonymous login
+                    throw new UnsupportedOperationException();
+//                    ( (XMPPTCPConnection) connection ).loginAnonymously();
                 }
                 else
                 {
@@ -1162,7 +1175,8 @@ public class LoginDialog {
                         resource = JiveInfo.getName() + " " + JiveInfo.getVersion();
                     }
 
-                    connection.login( getLoginUsername(), getLoginPassword(), modifyWildcards( resource ).trim() );
+                    Resourcepart resourcepart = Resourcepart.from(modifyWildcards( resource ).trim());
+                    connection.login( getLoginUsername(), getLoginPassword(), resourcepart );
                 }
 
                 final SessionManager sessionManager = SparkManager.getSessionManager();

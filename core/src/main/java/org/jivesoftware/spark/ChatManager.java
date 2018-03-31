@@ -41,6 +41,14 @@ import org.jivesoftware.spark.util.UIComponentRegistry;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
@@ -223,21 +231,35 @@ public class ChatManager implements ChatManagerListener {
      *
      * @param jid the jid of the user to chat with.
      * @return the ChatRoom.
+     * @deprecated use {@link #getChatRoom(BareJid)} instead.
      */
+    @Deprecated
     public ChatRoom getChatRoom(String jid) {
+        BareJid mucAddress = JidCreate.bareFrom(jid);
+        return getChatRoom(mucAddress);
+    }
+
+    /**
+     * Returns the <code>ChatRoom</code> for the giving jid. If the ChatRoom is not found,
+     * a new ChatRoom will be created.
+     *
+     * @param jid the jid of the user to chat with.
+     * @return the ChatRoom.
+     */
+    public ChatRoom getChatRoom(BareJid jid) {
         ChatRoom chatRoom;
         try {
             chatRoom = getChatContainer().getChatRoom(jid);
         }
         catch (ChatRoomNotFoundException e) {
             ContactList contactList = SparkManager.getWorkspace().getContactList();
-            ContactItem item = contactList.getContactItemByJID(jid);
+            ContactItem item = contactList.getContactItemByJID(jid.toString());
             if (item != null) {
                 String nickname = item.getDisplayName();
-                chatRoom = UIComponentRegistry.createChatRoom(jid, nickname, nickname);
+                chatRoom = UIComponentRegistry.createChatRoom(jid.toString(), nickname, nickname);
             }
             else {
-                chatRoom = UIComponentRegistry.createChatRoom(jid, jid, jid);
+                chatRoom = UIComponentRegistry.createChatRoom(jid.toString(), jid.toString(), jid.toString());
             }
 
 
@@ -253,21 +275,44 @@ public class ChatManager implements ChatManagerListener {
      * @param roomName    the name of the room.
      * @param serviceName the service name to use (ex.conference.jivesoftware.com)
      * @return the new ChatRoom created. If an error occured, null will be returned.
+     * @deprecated use {@link #createConferenceRoom(Localpart, DomainBareJid)} instead.
      */
+    @Deprecated
     public ChatRoom createConferenceRoom(String roomName, String serviceName) {
-        final MultiUserChat chatRoom = MultiUserChatManager.getInstanceFor( SparkManager.getConnection()).getMultiUserChat( roomName + "@" + serviceName );
+        DomainBareJid serviceAddress;
+        Localpart localpart;
+        try {
+            localpart = Localpart.from(roomName);
+            serviceAddress = JidCreate.domainBareFrom(serviceName);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
+        return createConferenceRoom(localpart, serviceAddress);
+    }
+
+    /**
+     * Creates a new public Conference Room.
+     *
+     * @param roomName    the name of the room.
+     * @param serviceName the service name to use (ex.conference.jivesoftware.com)
+     * @return the new ChatRoom created. If an error occured, null will be returned.
+     */
+    public ChatRoom createConferenceRoom(Localpart roomName, DomainBareJid serviceName) {
+        EntityBareJid roomAddress = JidCreate.entityBareFrom(roomName, serviceName);
+        final MultiUserChat chatRoom = MultiUserChatManager.getInstanceFor( SparkManager.getConnection()).getMultiUserChat( roomAddress);
 
         final GroupChatRoom room = UIComponentRegistry.createGroupChatRoom(chatRoom);
 
         try {
             LocalPreferences pref = SettingsManager.getLocalPreferences();
-            chatRoom.create(pref.getNickname());
+            Resourcepart nickname = Resourcepart.from(pref.getNickname());
+            chatRoom.create(nickname);
 
             // Send an empty room configuration form which indicates that we want
             // an instant room
             chatRoom.sendConfigurationForm(new Form( DataForm.Type.submit ));
         }
-        catch (XMPPException | SmackException e1) {
+        catch (XMPPException | SmackException | InterruptedException e1) {
             Log.error("Unable to send conference room chat configuration form.", e1);
             return null;
         }
@@ -687,13 +732,13 @@ public class ChatManager implements ChatManagerListener {
         } );
     }
 
-    public void cancelledNotification(final String from, final ChatState state) {
+    public void cancelledNotification(final Jid from, final ChatState state) {
         SwingUtilities.invokeLater( () -> {
             ContactList contactList = SparkManager.getWorkspace().getContactList();
 
             ChatRoom chatRoom;
             try {
-                chatRoom = getChatContainer().getChatRoom(XmppStringUtils.parseBareJid(from));
+                chatRoom = getChatContainer().getChatRoom(from.asBareJid());
                 if (chatRoom != null && chatRoom instanceof ChatRoomImpl) {
                     typingNotificationList.remove(chatRoom);
                     // Notify Decorators

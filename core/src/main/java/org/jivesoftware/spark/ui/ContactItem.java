@@ -48,6 +48,9 @@ import org.jivesoftware.sparkimpl.plugin.layout.LayoutSettingsManager;
 import org.jivesoftware.sparkimpl.profile.ext.VCardUpdateExtension;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 /**
@@ -61,7 +64,10 @@ public class ContactItem extends JPanel {
     private JLabel descriptionLabel;
     private String nickname;
     private String alias;
+
+    // TODO: This should probably be of type BareJid.
     private final String fullyQualifiedJID;
+
 	private JLabel specialImageLabel;
     private Icon icon;
 
@@ -455,9 +461,16 @@ public class ContactItem extends JPanel {
             getNicknameLabel().setFont(new Font("Dialog", Font.PLAIN, fontSize));
             getNicknameLabel().setForeground((Color)UIManager.get("ContactItemOffline.color"));
 
-            RosterEntry entry = Roster.getInstanceFor( SparkManager.getConnection() ).getEntry(getJID());
+            BareJid bareJid;
+            try {
+                bareJid = JidCreate.bareFrom(getJID());
+            } catch (XmppStringprepException e) {
+                throw new IllegalStateException(e);
+            }
+
+            RosterEntry entry = Roster.getInstanceFor( SparkManager.getConnection() ).getEntry(bareJid);
             if (entry != null && (entry.getType() == RosterPacket.ItemType.none || entry.getType() == RosterPacket.ItemType.from)
-                    && RosterPacket.ItemStatus.SUBSCRIPTION_PENDING == entry.getStatus()) {
+                    && entry.isSubscriptionPending()) {
                 // Do not move out of group.
                 setIcon(SparkRes.getImageIcon(SparkRes.SMALL_QUESTION));
                 getNicknameLabel().setFont(new Font("Dialog", Font.PLAIN, fontSize));

@@ -49,6 +49,9 @@ import org.jivesoftware.spark.util.UIComponentRegistry;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
@@ -356,13 +359,13 @@ public class GroupChatRoom extends ChatRoom
      */
     private Color getMessageBackground( String nickname, String body )
     {
-        final String myNickName = chat.getNickname();
+        final Resourcepart myNickName = chat.getNickname();
         final String myUserName = SparkManager.getSessionManager().getUsername();
         final Pattern usernameMatch = Pattern.compile( myUserName, Pattern.CASE_INSENSITIVE );
-        final Pattern nicknameMatch = Pattern.compile( myNickName, Pattern.CASE_INSENSITIVE );
+        final Pattern nicknameMatch = Pattern.compile( myNickName.toString(), Pattern.CASE_INSENSITIVE );
 
         // Should we even highlight this packet?
-        if ( pref.isMucHighNameEnabled() && myNickName.equalsIgnoreCase( nickname ) )
+        if ( pref.isMucHighNameEnabled() && myNickName.toString().equalsIgnoreCase( nickname ) )
         {
             return new Color( 244, 248, 255 );
         }
@@ -761,88 +764,88 @@ public class GroupChatRoom extends ChatRoom
         chat.addParticipantStatusListener( new DefaultParticipantStatusListener()
         {
             @Override
-            public void kicked( String participant, String actor, String reason )
+            public void kicked( EntityFullJid participant, Jid actor, String reason )
             {
-                insertText( Res.getString( "message.user.kicked.from.room", XmppStringUtils.parseResource( participant ), actor, reason ) );
+                insertText( Res.getString( "message.user.kicked.from.room", participant.getResourcepart(), actor, reason ) );
             }
 
             @Override
-            public void voiceGranted( String participant )
+            public void voiceGranted( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.given.voice", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.given.voice", participant.getResourcepart() ) );
             }
 
             @Override
-            public void voiceRevoked( String participant )
+            public void voiceRevoked( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.voice.revoked", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.voice.revoked", participant.getResourcepart() ) );
             }
 
             @Override
-            public void banned( String participant, String actor, String reason )
+            public void banned( EntityFullJid participant, Jid actor, String reason )
             {
-                insertText( Res.getString( "message.user.banned", XmppStringUtils.parseResource( participant ), reason ) );
+                insertText( Res.getString( "message.user.banned", participant.getResourcepart(), reason ) );
             }
 
             @Override
-            public void membershipGranted( String participant )
+            public void membershipGranted( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.granted.membership", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.granted.membership", participant.getResourcepart() ) );
             }
 
             @Override
-            public void membershipRevoked( String participant )
+            public void membershipRevoked( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.revoked.membership", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.revoked.membership", participant.getResourcepart() ) );
             }
 
             @Override
-            public void moderatorGranted( String participant )
+            public void moderatorGranted( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.granted.moderator", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.granted.moderator", participant.getResourcepart() ) );
             }
 
             @Override
-            public void moderatorRevoked( String participant )
+            public void moderatorRevoked( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.revoked.moderator", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.revoked.moderator", participant.getResourcepart() ) );
             }
 
             @Override
-            public void ownershipGranted( String participant )
+            public void ownershipGranted( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.granted.owner", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.granted.owner", participant.getResourcepart() ) );
             }
 
             @Override
-            public void ownershipRevoked( String participant )
+            public void ownershipRevoked( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.revoked.owner", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.revoked.owner", participant.getResourcepart() ) );
             }
 
             @Override
-            public void adminGranted( String participant )
+            public void adminGranted( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.granted.admin", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.granted.admin", participant.getResourcepart() ) );
             }
 
             @Override
-            public void adminRevoked( String participant )
+            public void adminRevoked( EntityFullJid participant )
             {
-                insertText( Res.getString( "message.user.revoked.admin", XmppStringUtils.parseResource( participant ) ) );
+                insertText( Res.getString( "message.user.revoked.admin", participant.getResourcepart() ) );
             }
 
             @Override
-            public void nicknameChanged( String participant, String nickname )
+            public void nicknameChanged( EntityFullJid participant, Resourcepart nickname )
             {
-                insertText( Res.getString( "message.user.nickname.changed", XmppStringUtils.parseResource( participant ), nickname ) );
+                insertText( Res.getString( "message.user.nickname.changed", participant.getResourcepart(), nickname ) );
             }
         } );
 
         chat.addUserStatusListener( new DefaultUserStatusListener()
         {
             @Override
-            public void kicked( String s, String reason )
+            public void kicked( Jid s, String reason )
             {
                 if ( ModelUtil.hasLength( reason ) )
                 {
@@ -873,7 +876,7 @@ public class GroupChatRoom extends ChatRoom
             }
 
             @Override
-            public void banned( String s, String reason )
+            public void banned( Jid s, String reason )
             {
                 insertText( Res.getString( "message.your.banned" ) );
             }
@@ -929,7 +932,7 @@ public class GroupChatRoom extends ChatRoom
 
         chat.addSubjectUpdatedListener( ( subject, by ) -> {
             subjectPanel.setSubject( subject );
-            final String nickname = XmppStringUtils.parseResource( by );
+            final Resourcepart nickname = by.getResourcepart();
             final String insertMessage = Res.getString( "message.subject.has.been.changed.to", subject, nickname );
             getTranscriptWindow().insertNotificationMessage( insertMessage, ChatManager.NOTIFICATION_COLOR );
         } );
@@ -1026,9 +1029,10 @@ public class GroupChatRoom extends ChatRoom
      * @param usersJID the jid of the user (ex. spark@conference.jivesoftware.com/Dan)
      * @return true if the user is blocked, otherwise false.
      */
-    public boolean isBlocked( String usersJID )
+    // TODO: usersJID should probably be of type EntityFullJid.
+    public boolean isBlocked( CharSequence usersJID )
     {
-        return blockedUsers.contains( usersJID );
+        return blockedUsers.contains( usersJID.toString() );
     }
 
     /**

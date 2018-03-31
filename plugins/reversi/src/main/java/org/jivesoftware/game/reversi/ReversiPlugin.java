@@ -48,6 +48,7 @@ import org.jivesoftware.spark.ui.ChatRoomListener;
 import org.jivesoftware.spark.ui.ChatRoomListenerAdapter;
 import org.jivesoftware.spark.ui.rooms.ChatRoomImpl;
 import org.jivesoftware.spark.util.log.Log;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.util.XmppStringUtils;
 
 /**
@@ -89,7 +90,8 @@ public class ReversiPlugin implements Plugin {
 
         // Add IQ listener to listen for incoming game invitations.
         gameOfferListener = new StanzaListener() {
-            public void processPacket(Stanza stanza) {
+            @Override
+            public void processStanza(Stanza stanza) {
                 GameOffer invitation = (GameOffer) stanza;
                 if (invitation.getType() == IQ.Type.get) {
                     showInvitationAlert(invitation);
@@ -147,7 +149,7 @@ public class ReversiPlugin implements Plugin {
         // Got an offer to start a new game. So, make sure that a chat is
         // started with the other
         // user and show an invite panel.
-        final ChatRoom room = SparkManager.getChatManager().getChatRoom( XmppStringUtils.parseBareJid(invitation.getFrom()) );
+        final ChatRoom room = SparkManager.getChatManager().getChatRoom( invitation.getFrom().asBareJid() );
 
         inviteAlert = new JPanel();
         inviteAlert.setLayout(new BorderLayout());
@@ -164,7 +166,7 @@ public class ReversiPlugin implements Plugin {
         invitePanel.setPreferredSize(new Dimension(24, 24));
         inviteAlert.add(invitePanel, BorderLayout.WEST);
         JPanel content = new JPanel(new BorderLayout());
-        String opponentName = invitation.getFrom(); // TODO: convert to more
+        Jid opponentName = invitation.getFrom(); // TODO: convert to more
                                                     // readable name.
         content.add(new JLabel(opponentName + " is requesting a Reversi game ..."), BorderLayout.CENTER);
         JPanel buttonPanel = new JPanel();
@@ -317,7 +319,7 @@ public class ReversiPlugin implements Plugin {
                                {
                                    SparkManager.getConnection().sendStanza(reply);
                                }
-                               catch ( SmackException.NotConnectedException e1 )
+                               catch ( SmackException.NotConnectedException | InterruptedException e1 )
                                {
                                    Log.warning( "Unable to send invitation cancellation to " + reply.getTo(), e1 );
                                }
@@ -335,7 +337,8 @@ public class ReversiPlugin implements Plugin {
 
                         // Add a listener for a reply to our offer.
                         SparkManager.getConnection().addAsyncStanzaListener(new StanzaListener() {
-                            public void processPacket(Stanza stanza) {
+                            @Override
+                            public void processStanza(Stanza stanza) {
                                 GameOffer offerReply = ((GameOffer) stanza);
 
                                 if (offerReply.getType() == IQ.Type.result) {
@@ -360,7 +363,7 @@ public class ReversiPlugin implements Plugin {
                         {
                             SparkManager.getConnection().sendStanza(offer);
                         }
-                        catch ( SmackException.NotConnectedException e1 )
+                        catch ( SmackException.NotConnectedException | InterruptedException e1 )
                         {
                             Log.warning( "Unable to send invitation to " + offer.getTo(), e1 );
                         }
@@ -392,7 +395,7 @@ public class ReversiPlugin implements Plugin {
      * @param opponentJID
      *            the opponent's JID.
      */
-    private void showReversiBoard(int gameID, ChatRoom room, boolean startingPlayer, String opponentJID) {
+    private void showReversiBoard(int gameID, ChatRoom room, boolean startingPlayer, Jid opponentJID) {
         JSplitPane pane = room.getSplitPane();
         pane.setResizeWeight(1.0);
         BackgroundPanel reversiBackground = new BackgroundPanel();

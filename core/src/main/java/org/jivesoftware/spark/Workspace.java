@@ -308,7 +308,7 @@ public class Workspace extends JPanel implements StanzaListener {
             {
                 handleIncomingPacket(stanza);
             }
-            catch ( SmackException.NotConnectedException e )
+            catch ( SmackException.NotConnectedException | InterruptedException e )
             {
                 // This would be odd: not being connected while receiving a stanza...
                 Log.warning( "Unable to handle incoming stanza: " + stanza , e );
@@ -317,7 +317,7 @@ public class Workspace extends JPanel implements StanzaListener {
     }
 
 
-    private void handleIncomingPacket(Stanza stanza) throws SmackException.NotConnectedException
+    private void handleIncomingPacket(Stanza stanza) throws SmackException.NotConnectedException, InterruptedException
     {
         // We only handle message packets here.
         if (stanza instanceof Message) {
@@ -350,7 +350,7 @@ public class Workspace extends JPanel implements StanzaListener {
             }
 
             // Create new chat room for Agent Invite.
-            final String from = stanza.getFrom();
+            final String from = stanza.getFrom().toString();
             final String host = SparkManager.getSessionManager().getServerAddress();
 
             // Don't allow workgroup notifications to come through here.
@@ -379,14 +379,15 @@ public class Workspace extends JPanel implements StanzaListener {
      * Creates a new room if necessary and inserts an offline message.
      *
      * @param message The Offline message.
+     * @throws InterruptedException 
      */
-    private void handleOfflineMessage(Message message) throws SmackException.NotConnectedException
+    private void handleOfflineMessage(Message message) throws SmackException.NotConnectedException, InterruptedException
     {
         if(!ModelUtil.hasLength(message.getBody())){
             return;
         }
 
-        String bareJID = XmppStringUtils.parseBareJid(message.getFrom());
+        String bareJID = message.getFrom().asBareJid().toString();
         ContactItem contact = contactList.getContactItemByJID(bareJID);
         String nickname = XmppStringUtils.parseLocalpart(bareJID);
         if (contact != null) {

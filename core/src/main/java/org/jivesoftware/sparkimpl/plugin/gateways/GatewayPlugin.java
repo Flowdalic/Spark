@@ -38,6 +38,7 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.gateways.transports.*;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.parts.Domainpart;
 import org.jxmpp.util.XmppStringUtils;
 
 
@@ -125,59 +126,59 @@ public class GatewayPlugin implements Plugin, ContactItemHandler {
 
         for (DiscoverItems.Item item : discoItems.getItems() ) {
 
-            String entityName = item.getEntityID();
+            String entityName = item.getEntityID().toString();
             if (entityName != null) {
         	if (entityName.startsWith("aim.")) {
-                    AIMTransport aim = new AIMTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), aim);
+                    AIMTransport aim = new AIMTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), aim);
                 }
                 else if (entityName.startsWith("msn.")) {
-                    MSNTransport msn = new MSNTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), msn);
+                    MSNTransport msn = new MSNTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), msn);
                 }
                 else if (entityName.startsWith("yahoo.")) {
-                    YahooTransport yahoo = new YahooTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), yahoo);
+                    YahooTransport yahoo = new YahooTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), yahoo);
                 }
                 else if (entityName.startsWith("icq.")) {
-                    ICQTransport icq = new ICQTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), icq);
+                    ICQTransport icq = new ICQTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), icq);
                 }
                 else if (entityName.startsWith("gtalk.")) {
-                    GTalkTransport gtalk = new GTalkTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), gtalk);
+                    GTalkTransport gtalk = new GTalkTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), gtalk);
                 }
                 else if (entityName.startsWith("xmpp.")) {
-                    XMPPTransport xmppTransport = new XMPPTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), xmppTransport);
+                    XMPPTransport xmppTransport = new XMPPTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), xmppTransport);
                 }
                 else if (entityName.startsWith("irc.")) {
-                    IRCTransport ircTransport = new IRCTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), ircTransport);
+                    IRCTransport ircTransport = new IRCTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), ircTransport);
                 }
                 else if (entityName.startsWith("sip.") || entityName.startsWith("simple.")) {
-                    SimpleTransport simpleTransport = new SimpleTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), simpleTransport);
+                    SimpleTransport simpleTransport = new SimpleTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), simpleTransport);
                 }
                 else if (entityName.startsWith("gadugadu.")) {
-                    GaduGaduTransport gadugaduTransport = new GaduGaduTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), gadugaduTransport);
+                    GaduGaduTransport gadugaduTransport = new GaduGaduTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), gadugaduTransport);
                 }
                 else if (entityName.startsWith("qq.")) {
-                    QQTransport qqTransport = new QQTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), qqTransport);
+                    QQTransport qqTransport = new QQTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), qqTransport);
                 }
                 else if (entityName.startsWith("sametime.")) {
-                	SametimeTransport sametimeTransport = new SametimeTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), sametimeTransport);
+                	SametimeTransport sametimeTransport = new SametimeTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), sametimeTransport);
                 }
                 else if (entityName.startsWith("facebook.")) {
-                	FacebookTransport facebookTransport = new FacebookTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), facebookTransport);
+                	FacebookTransport facebookTransport = new FacebookTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), facebookTransport);
                 }
                 else if (entityName.startsWith("myspace.") || entityName.startsWith("myspaceim.")) {
-                	MySpaceTransport myspaceTransport = new MySpaceTransport(item.getEntityID());
-                    TransportUtils.addTransport(item.getEntityID(), myspaceTransport);
+                	MySpaceTransport myspaceTransport = new MySpaceTransport(item.getEntityID().toString());
+                    TransportUtils.addTransport(item.getEntityID().toString(), myspaceTransport);
                 }                
             }
         }
@@ -206,7 +207,7 @@ public class GatewayPlugin implements Plugin, ContactItemHandler {
         SparkManager.getConnection().addAsyncStanzaListener( stanza -> {
             if (stanza instanceof Presence) {
                 Presence presence = (Presence)stanza;
-                Transport transport = TransportUtils.getTransport(stanza.getFrom());
+                Transport transport = TransportUtils.getTransport(stanza.getFrom().toString());
                 if (transport != null) {
                     boolean registered = true;
                     if (presence.getType() == Presence.Type.unavailable) {
@@ -232,7 +233,7 @@ public class GatewayPlugin implements Plugin, ContactItemHandler {
             }
             else if (stanza instanceof Message) {
                 Message message = (Message)stanza;
-                String from = message.getFrom();
+                String from = message.getFrom().toString();
                 boolean hasError = message.getType() == Message.Type.error;
                 String body = message.getBody();
 
@@ -257,8 +258,8 @@ public class GatewayPlugin implements Plugin, ContactItemHandler {
             for (ContactItem contactItem : contactGroup.getContactItems()) {
                 Presence presence = contactItem.getPresence();
                 if (presence.isAvailable()) {
-                    String domain = XmppStringUtils.parseDomain(presence.getFrom());
-                    Transport transport = TransportUtils.getTransport(domain);
+                    Domainpart domain = presence.getFrom().getDomain();
+                    Transport transport = TransportUtils.getTransport(domain.toString());
                     if (transport != null) {
                         handlePresence(contactItem, presence);
                         contactGroup.fireContactGroupUpdated();
@@ -281,7 +282,7 @@ public class GatewayPlugin implements Plugin, ContactItemHandler {
                     {
                         SparkManager.getConnection().sendStanza(p);
                     }
-                    catch ( SmackException.NotConnectedException e )
+                    catch ( SmackException.NotConnectedException | InterruptedException e )
                     {
                         Log.warning( "Unable to forward presence change to transport.", e );
                     }
@@ -293,8 +294,8 @@ public class GatewayPlugin implements Plugin, ContactItemHandler {
 
     public boolean handlePresence(ContactItem item, Presence presence) {
         if (presence.isAvailable()) {
-            String domain = XmppStringUtils.parseDomain(presence.getFrom());
-            Transport transport = TransportUtils.getTransport(domain);
+            Domainpart domain = presence.getFrom().getDomain();
+            Transport transport = TransportUtils.getTransport(domain.toString());
             if (transport != null) {
                 if (presence.getType() == Presence.Type.available) {
                     item.setSpecialIcon(transport.getIcon());

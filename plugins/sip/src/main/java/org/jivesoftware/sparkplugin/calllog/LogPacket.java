@@ -131,8 +131,8 @@ public class LogPacket extends IQ {
         lp.setTo(NAME + "." + connection.getServiceName());
         lp.setType(IQ.Type.set);
 
-        PacketCollector collector = connection
-                .createPacketCollector(new PacketIDFilter(lp.getPacketID()));
+        StanzaCollector collector = connection
+                .createStanzaCollector(new PacketIDFilter(lp.getPacketID()));
         connection.sendStanza(lp);
 
         LogPacket response = (LogPacket)collector

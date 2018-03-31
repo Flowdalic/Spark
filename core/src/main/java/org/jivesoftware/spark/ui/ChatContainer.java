@@ -573,7 +573,8 @@ public class ChatContainer extends SparkTabbedPane implements MessageListener, C
      * @return the ChatRoom
      * @throws ChatRoomNotFoundException if the room was not found.
      */
-    public ChatRoom getChatRoom(String roomName) throws ChatRoomNotFoundException {
+    // TODO: roomName should be of type EntityBareJid.
+    public ChatRoom getChatRoom(CharSequence roomName) throws ChatRoomNotFoundException {
         for (int i = 0; i < getTabCount(); i++) {
             ChatRoom room = null;
             try {
@@ -583,7 +584,7 @@ public class ChatContainer extends SparkTabbedPane implements MessageListener, C
                 // Ignore
             }
 
-            if (room != null && room.getRoomname().equalsIgnoreCase(roomName) && room.isActive()) {
+            if (room != null && room.getRoomname().equalsIgnoreCase(roomName.toString()) && room.isActive()) {
                 return room;
             }
         }

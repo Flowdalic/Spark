@@ -127,7 +127,7 @@ public class Gateway extends IQ {
         registration.setUsername(username);
 
         XMPPConnection con = SparkManager.getConnection();
-        PacketCollector collector = con.createPacketCollector(new StanzaIdFilter(registration.getStanzaId()));
+        StanzaCollector collector = con.createStanzaCollector(new StanzaIdFilter(registration.getStanzaId()));
         try
         {
             con.sendStanza( registration );

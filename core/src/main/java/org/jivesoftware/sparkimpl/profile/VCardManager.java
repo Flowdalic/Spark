@@ -39,6 +39,8 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
 import org.jivesoftware.sparkimpl.profile.ext.JabberAvatarExtension;
 import org.jivesoftware.sparkimpl.profile.ext.VCardUpdateExtension;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.util.XmppStringUtils;
 import org.xmlpull.mxp1.MXParser;
 import org.xmlpull.v1.XmlPullParser;
@@ -194,7 +196,7 @@ public class VCardManager {
             if (stanza instanceof VCard)
             {
                 VCard VCardpacket = (VCard)stanza;
-                String jid = VCardpacket.getFrom();
+                String jid = VCardpacket.getFrom().toString();
                 if (VCardpacket.getType().equals(IQ.Type.result) && jid != null && delayedContacts.contains(jid))
                 {
                     delayedContacts.remove(jid);
@@ -246,7 +248,7 @@ public class VCardManager {
                     try {
                         personalVCard.load(SparkManager.getConnection());
                     }
-                    catch (XMPPException | SmackException e) {
+                    catch (XMPPException | SmackException | InterruptedException e) {
                         Log.error("Error loading vcard information.", e);
                     }
                     return true;
@@ -486,27 +488,27 @@ public class VCardManager {
 	 * 
 	 * @return the new network vCard or a vCard with an error 
 	 */
-    public VCard reloadVCard(String jid) {
-        jid = XmppStringUtils.parseBareJid(jid);
+    public VCard reloadVCard(String jidString) {
+        EntityBareJid jid = JidCreate.entityBareFrom(jidString);
         VCard vcard = new VCard();
         try {
-        	vcard.setJabberId(jid);
+        	vcard.setJabberId(jid.toString());
             vcard.load(SparkManager.getConnection(), jid);
             if (vcard.getNickName() != null && vcard.getNickName().length() > 0)
             {
             	// update nickname.
-            	ContactItem item = SparkManager.getWorkspace().getContactList().getContactItemByJID(jid);
+            	ContactItem item = SparkManager.getWorkspace().getContactList().getContactItemByJID(jid.toString());
             	item.setNickname(vcard.getNickName());
             	// TODO: this doesn't work if someone removes his nickname. If we remove it in that case, it will cause problems with people using another way to manage their nicknames.
             }
-            addVCard(jid, vcard);
-            persistVCard(jid, vcard);
+            addVCard(jid.toString(), vcard);
+            persistVCard(jid.toString(), vcard);
         }
         catch (XMPPException | SmackException e) {
         	////System.out.println(jid+" Fehler in reloadVCard ----> null");
         	vcard.setError(new XMPPError(XMPPError.Condition.resource_constraint));
-        	vcard.setJabberId(jid);
-        	delayedContacts.add(jid);
+        	vcard.setJabberId(jid.toString());
+        	delayedContacts.add(jid.toString());
         	return vcard;
         	//We dont want cards with error
            // vcard.setError(new XMPPError(XMPPError.Condition.request_timeout));

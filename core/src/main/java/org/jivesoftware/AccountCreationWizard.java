@@ -19,6 +19,7 @@ package org.jivesoftware;
 
 import org.jivesoftware.resource.Res;
 import org.jivesoftware.smack.*;
+import org.jivesoftware.smack.ConnectionConfiguration.DnssecMode;
 import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.parsing.ExceptionLoggingCallback;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
@@ -35,6 +36,8 @@ import org.jivesoftware.sparkimpl.certificates.SparkSSLSocketFactory;
 import org.jivesoftware.sparkimpl.certificates.SparkSSLContext;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.net.ssl.SSLContext;
@@ -224,10 +227,11 @@ public class AccountCreationWizard extends JPanel {
                     return e;
                 }
                 try {
+                    Localpart localpart = Localpart.from(getUsername());
                     final AccountManager accountManager = AccountManager.getInstance(connection);
-                    accountManager.createAccount(getUsername(), getPassword());
+                    accountManager.createAccount(localpart, getPassword());
                 }
-                catch (XMPPException | SmackException e) {
+                catch (XMPPException | SmackException | InterruptedException | XmppStringprepException e) {
 
                     if ( e instanceof XMPPException.XMPPErrorException ) {
                         condition = ( (XMPPException.XMPPErrorException) e ).getXMPPError().getCondition();
@@ -337,7 +341,7 @@ public class AccountCreationWizard extends JPanel {
 
         final XMPPTCPConnectionConfiguration.Builder builder = XMPPTCPConnectionConfiguration.builder()
                 .setUsernameAndPassword( "username", "password" )
-                .setServiceName( serverName )
+                .setXmppDomain( serverName )
                 .setPort( port )
                 .setCompressionEnabled( localPreferences.isCompressionEnabled() )
                 .setSecurityMode( securityMode );
@@ -365,7 +369,7 @@ public class AccountCreationWizard extends JPanel {
                 // SMACK 4.1.9 does not support XEP-0368, and does not apply a port change, if the host is not changed too.
                 // Here, we force the host to be set (by doing a DNS lookup), and force the port to 5223 (which is the
                 // default 'old-style' SSL port).
-                builder.setHost( DNSUtil.resolveXMPPDomain( serverName, null ).get( 0 ).getFQDN() );
+                builder.setHost( DNSUtil.resolveXMPPServiceDomain( serverName, null, DnssecMode.disabled ).get( 0 ).getFQDN() );
                 builder.setPort( 5223 );
             }
             builder.setSocketFactory( new SparkSSLSocketFactory(SparkSSLContext.Options.ONLY_SERVER_SIDE) );
@@ -379,7 +383,11 @@ public class AccountCreationWizard extends JPanel {
 
         final AbstractXMPPConnection connection = new XMPPTCPConnection( configuration );
         connection.setParsingExceptionCallback( new ExceptionLoggingCallback() );
-        connection.connect();
+        try {
+            connection.connect();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
 
         return connection;
     }

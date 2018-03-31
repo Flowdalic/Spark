@@ -28,6 +28,10 @@ import org.jivesoftware.spark.SparkManager;
 import org.jivesoftware.spark.UserManager;
 import org.jivesoftware.spark.ui.ChatRoom;
 import org.jivesoftware.spark.ui.conferences.ConferenceUtils;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 /**
  * Class to handle URI-Mappings defined by <br>
@@ -134,11 +138,20 @@ public class UriManager {
      */
     public void handleUnsubscribe(URI uri) throws SmackException.NotConnectedException
 	{
-	String jid = retrieveJID(uri);
+	Jid jid;
+    try {
+        jid = JidCreate.from(retrieveJID(uri));
+    } catch (XmppStringprepException e) {
+        throw new IllegalStateException(e);
+    }
 
 	Presence response = new Presence(Presence.Type.unsubscribe);
 	response.setTo(jid);
-	SparkManager.getConnection().sendStanza(response);
+	try {
+        SparkManager.getConnection().sendStanza(response);
+    } catch (InterruptedException e) {
+        throw new IllegalStateException(e);
+    }
     }
 
     /***
@@ -154,7 +167,12 @@ public class UriManager {
 	// xmpp:romeo@montague.net?roster;name=Romeo%20Montague
 	// xmpp:romeo@montague.net?roster;group=Friends
 	// xmpp:romeo@montague.net?roster;name=Romeo%20Montague;group=Friends
-	String jid = retrieveJID(uri);
+    BareJid jid;
+    try {
+        jid = JidCreate.bareFrom(retrieveJID(uri));
+    } catch (XmppStringprepException e) {
+        throw new IllegalStateException(e);
+    }
 
 	String name = "";
 	String query = uri.getQuery();
@@ -208,8 +226,14 @@ public class UriManager {
     public void handleRemove(URI uri) throws Exception {
 	// xmpp:romeo@montague.net?remove
 
-	String jid = retrieveJID(uri);
-	Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
+    BareJid jid;
+    try {
+        jid = JidCreate.bareFrom(retrieveJID(uri));
+    } catch (XmppStringprepException e) {
+        throw new IllegalStateException(e);
+    }
+
+    Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
 	RosterEntry entry = roster.getEntry(jid);
 	roster.removeEntry(entry);
     }
