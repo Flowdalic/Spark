@@ -302,7 +302,8 @@ public class Workspace extends JPanel implements StanzaListener {
      *
      * @param stanza the smack packet to process.
      */
-    public void processPacket(final Stanza stanza) {
+    @Override
+    public void processStanza(final Stanza stanza) {
         SwingUtilities.invokeLater( () -> {
             try
             {

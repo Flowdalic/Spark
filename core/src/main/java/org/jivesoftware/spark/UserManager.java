@@ -32,6 +32,9 @@ import org.jivesoftware.spark.util.SwingTimerTask;
 import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.profile.VCardManager;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.BorderFactory;
@@ -217,7 +220,12 @@ public class UserManager {
      * @return the Occupant found.
      */
     public Occupant getOccupant(GroupChatRoom groupChatRoom, String nickname) {
-        String userJID = groupChatRoom.getRoomname() + "/" + nickname;
+        EntityFullJid userJID;
+        try {
+            userJID = JidCreate.entityFullFrom(groupChatRoom.getRoomname() + "/" + nickname);
+        } catch (XmppStringprepException e) {
+            throw new IllegalArgumentException(e);
+        }
         Occupant occ = null;
         try {
             occ = groupChatRoom.getMultiUserChat().getOccupant(userJID);
@@ -350,7 +358,7 @@ public class UserManager {
      */
     public String getFullJID(String jid) {
         Presence presence = PresenceManager.getPresence(jid);
-        return presence.getFrom();
+        return presence.getFrom().toString();
     }
 
 

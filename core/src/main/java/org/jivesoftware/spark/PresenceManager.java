@@ -24,6 +24,10 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.muc.packet.MUCUser;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.Icon;
@@ -74,10 +78,16 @@ public class PresenceManager {
     /**
      * Returns true if the user is online.
      *
-     * @param jid the jid of the user.
+     * @param jidString the jid of the user.
      * @return true if online.
      */
-    public static boolean isOnline(String jid) {
+    public static boolean isOnline(String jidString) {
+        BareJid jid;
+        try {
+            jid = JidCreate.bareFrom(jidString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
         final Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
         Presence presence = roster.getPresence(jid);
         return presence.isAvailable();
@@ -86,10 +96,16 @@ public class PresenceManager {
     /**
      * Returns true if the user is online and their status is available or free to chat.
      *
-     * @param jid the jid of the user.
+     * @param jidString the jid of the user.
      * @return true if the user is online and available.
      */
-    public static boolean isAvailable(String jid) {
+    public static boolean isAvailable(String jidString) {
+        BareJid jid;
+        try {
+            jid = JidCreate.bareFrom(jidString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
         final Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
         Presence presence = roster.getPresence(jid);
         return presence.isAvailable() && !presence.isAway();
@@ -108,13 +124,19 @@ public class PresenceManager {
     /**
      * Returns the presence of a user.
      *
-     * @param jid the users jid.
+     * @param jidString the users jid.
      * @return the users presence.
      */
-    public static Presence getPresence(String jid) {
-        if ( jid == null ) {
+    public static Presence getPresence(String jidString) {
+        if ( jidString == null ) {
             Log.error( "Unable to get the presence of a null jid!" );
             return null;
+        }
+        BareJid jid;
+        try {
+            jid = JidCreate.bareFrom(jidString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
         }
 		if (jid.equals(SparkManager.getSessionManager().getBareAddress())) {
 			return SparkManager.getWorkspace().getStatusBar().getPresence();
@@ -127,13 +149,19 @@ public class PresenceManager {
     /**
      * Returns the fully qualified jid of a user.
      *
-     * @param jid the users bare jid (ex. derek@jivesoftware.com)
+     * @param jidString the users bare jid (ex. derek@jivesoftware.com)
      * @return the fully qualified jid of a user (ex. derek@jivesoftware.com --> derek@jivesoftware.com/spark)
      */
-    public static String getFullyQualifiedJID(String jid) {
+    public static String getFullyQualifiedJID(String jidString) {
+        BareJid jid;
+        try {
+            jid = JidCreate.bareFrom(jidString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
         final Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
         Presence presence = roster.getPresence(jid);
-        return presence.getFrom();
+        return presence.getFrom().toString();
     }
     
 	public static String getJidFromMUCPresence(Presence presence) {		
@@ -141,12 +169,11 @@ public class PresenceManager {
 		for (ExtensionElement extension : extensions) {
 			if (extension instanceof MUCUser) {
 				final MUCUser mucUser = (MUCUser) extension;
-				String fullJid = mucUser.getItem().getJid();
+				Jid fullJid = mucUser.getItem().getJid();
                 if ( fullJid == null) {
                     return null;
                 }
- 				String userJid = XmppStringUtils.parseBareJid(fullJid);
-				return userJid;
+				return fullJid.asBareJid().toString();
 			}
 		}
 		return null;

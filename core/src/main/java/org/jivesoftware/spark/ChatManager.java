@@ -235,7 +235,12 @@ public class ChatManager implements ChatManagerListener {
      */
     @Deprecated
     public ChatRoom getChatRoom(String jid) {
-        BareJid mucAddress = JidCreate.bareFrom(jid);
+        BareJid mucAddress;
+        try {
+            mucAddress = JidCreate.bareFrom(jid);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
         return getChatRoom(mucAddress);
     }
 
@@ -312,7 +317,7 @@ public class ChatManager implements ChatManagerListener {
             // an instant room
             chatRoom.sendConfigurationForm(new Form( DataForm.Type.submit ));
         }
-        catch (XMPPException | SmackException | InterruptedException e1) {
+        catch (XMPPException | SmackException | InterruptedException | XmppStringprepException e1) {
             Log.error("Unable to send conference room chat configuration form.", e1);
             return null;
         }
@@ -550,12 +555,12 @@ public class ChatManager implements ChatManagerListener {
         if (conferenceService == null) {
             try {
                 final MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor( SparkManager.getConnection() );
-                Collection<String> col = multiUserChatManager.getServiceNames();
+                List<DomainBareJid> col = multiUserChatManager.getXMPPServiceDomains();
                 if (col.size() > 0) {
-                    conferenceService = col.iterator().next();
+                    conferenceService = col.iterator().next().toString();
                 }
             }
-            catch (XMPPException | SmackException e) {
+            catch (XMPPException | SmackException | InterruptedException e) {
                 Log.error(e);
             }
         }
@@ -749,7 +754,7 @@ public class ChatManager implements ChatManagerListener {
             catch (ChatRoomNotFoundException e) {
                 // Do nothing
             }
-            contactList.useDefaults(from);
+            contactList.useDefaults(from.toString());
         } );
     }
 
@@ -977,10 +982,11 @@ public class ChatManager implements ChatManagerListener {
          * @param state the new state of the chat.
          */
     	@Override
-        public void stateChanged(Chat chat, ChatState state) {
-    		String participant = chat.getParticipant();
+        public void stateChanged(Chat chat, ChatState state, Message message) {
+    	    Jid participant = chat.getParticipant();
+    		String participantString = participant.toString();
             if (ChatState.composing.equals(state)) {
-                composingNotification(participant);
+                composingNotification(participantString);
             } else {
             	cancelledNotification(participant, state);
             }

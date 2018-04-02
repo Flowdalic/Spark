@@ -24,6 +24,7 @@ import org.jivesoftware.smackx.disco.packet.DiscoverItems;
 import org.jivesoftware.spark.ui.PresenceListener;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.manager.Features;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.SwingUtilities;
@@ -50,7 +51,7 @@ public final class SessionManager implements ConnectionListener {
 
     private List<PresenceListener> presenceListeners = new ArrayList<>();
 
-    private String userBareAddress;
+    private EntityBareJid userBareAddress;
     private DiscoverItems discoverItems;
 
     // Stores our presence state at the time that the last connectionClosedOnError happened.
@@ -70,7 +71,7 @@ public final class SessionManager implements ConnectionListener {
         this.connection = connection;
         this.username = username;
         this.password = password;
-        this.userBareAddress = XmppStringUtils.parseBareJid(connection.getUser());
+        this.userBareAddress = connection.getUser().asEntityBareJid();
 
         // create workgroup session
         personalDataManager = PrivateDataManager.getInstanceFor( getConnection() );
@@ -90,7 +91,7 @@ public final class SessionManager implements ConnectionListener {
         try {
             discoverItems = disco.discoverItems(SparkManager.getConnection().getServiceName());
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);
             discoverItems = new DiscoverItems();
         }
@@ -205,7 +206,7 @@ public final class SessionManager implements ConnectionListener {
             {
                 SparkManager.getConnection().sendStanza(presence);
             }
-            catch ( SmackException.NotConnectedException e )
+            catch ( SmackException.NotConnectedException | InterruptedException e )
             {
                 Log.error( "Unable to send presence to " + presence.getTo(), e );
             }
@@ -256,7 +257,7 @@ public final class SessionManager implements ConnectionListener {
      * @return the users bare address.
      */
     public String getBareAddress() {
-        return userBareAddress;
+        return userBareAddress.toString();
     }
 
 

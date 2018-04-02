@@ -91,6 +91,10 @@ import org.jivesoftware.sparkimpl.plugin.filetransfer.transfer.ui.ReceiveFileTra
 import org.jivesoftware.sparkimpl.plugin.filetransfer.transfer.ui.SendFileTransfer;
 import org.jivesoftware.sparkimpl.plugin.filetransfer.transfer.ui.TransferUtils;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 /**
@@ -273,7 +277,7 @@ public class SparkTransferManager {
             return;
         }
 
-        String requestor = request.getRequestor();
+        String requestor = request.getRequestor().toString();
         String bareJID = XmppStringUtils.parseBareJid(requestor);
         String fileName = request.getFileName();
 
@@ -477,7 +481,7 @@ public class SparkTransferManager {
         SparkManager.getConnection().addAsyncStanzaListener( stanza -> {
             Presence presence = (Presence)stanza;
             if (presence.isAvailable()) {
-                String bareJID = XmppStringUtils.parseBareJid(presence.getFrom());
+                String bareJID = presence.getFrom().asBareJid().toString();
 
                 // Iterate through map.
                 ArrayList<File> list = waitMap.get(bareJID);
@@ -538,7 +542,15 @@ public class SparkTransferManager {
 	
         final ContactList contactList = SparkManager.getWorkspace().getContactList();
         String bareJID = XmppStringUtils.parseBareJid(jid);
-        String fullJID = PresenceManager.getFullyQualifiedJID(jid);
+        String fullJIDString = PresenceManager.getFullyQualifiedJID(jid);
+        EntityFullJid fullJID;
+        EntityBareJid bareJid;
+        try {
+            bareJid = JidCreate.entityBareFrom(bareJID);
+            fullJID = JidCreate.entityFullFrom(fullJIDString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
 
         if (!PresenceManager.isOnline(jid)) {
             ArrayList<File> list = waitMap.get(jid);
@@ -588,7 +600,7 @@ public class SparkTransferManager {
         }
 
         // Add listener to cancel transfer is sending file to user who just went offline.
-        AndFilter presenceFilter = new AndFilter(new StanzaTypeFilter(Presence.class), FromMatchesFilter.createBare(bareJID));
+        AndFilter presenceFilter = new AndFilter(new StanzaTypeFilter(Presence.class), FromMatchesFilter.createBare(bareJid));
         final StanzaListener packetListener = stanza -> {
             Presence presence = (Presence)stanza;
             if (!presence.isAvailable()) {
@@ -610,7 +622,7 @@ public class SparkTransferManager {
         } );
 
         try {
-            sendingUI.sendFile(transfer, transferManager, fullJID, contactItem.getDisplayName());
+            sendingUI.sendFile(transfer, transferManager, fullJID.toString(), contactItem.getDisplayName());
         }
         catch (NullPointerException e) {
             Log.error(e);
