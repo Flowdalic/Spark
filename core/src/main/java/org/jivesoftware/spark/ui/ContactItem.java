@@ -49,6 +49,7 @@ import org.jivesoftware.sparkimpl.profile.ext.VCardUpdateExtension;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
@@ -67,6 +68,7 @@ public class ContactItem extends JPanel {
 
     // TODO: This should probably be of type BareJid.
     private final String fullyQualifiedJID;
+    private final Jid jid;
 
 	private JLabel specialImageLabel;
     private Icon icon;
@@ -118,6 +120,11 @@ public class ContactItem extends JPanel {
         this.alias = alias;
         this.nickname = nickname;
         this.fullyQualifiedJID = fullyQualifiedJID;
+        try {
+            jid = JidCreate.from(fullyQualifiedJID);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
 
         if (initUi) {
 		displayNameLabel = new JLabel();
@@ -249,6 +256,10 @@ public class ContactItem extends JPanel {
      */
     public String getJID() {
         return fullyQualifiedJID;
+    }
+
+    public Jid getJid() {
+        return jid;
     }
 
     /**
