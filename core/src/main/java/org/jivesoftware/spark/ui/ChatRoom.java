@@ -365,8 +365,9 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
      * Sends a chat state to all peers.
      *
      * @param state the chat state.
+     * @throws InterruptedException 
      */
-    protected abstract void sendChatState( ChatState state ) throws SmackException.NotConnectedException;
+    protected abstract void sendChatState( ChatState state ) throws SmackException.NotConnectedException, InterruptedException;
 
     /**
      * Sets the chat state, causing an update to be sent to all peers if the new state warrants an update.
@@ -391,7 +392,7 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
             try
             {
                 sendChatState( state );
-            } catch ( SmackException.NotConnectedException e ) {
+            } catch ( SmackException.NotConnectedException | InterruptedException e ) {
                 Log.warning( "Unable to update the chat state to " + state, e );
             }
             lastNotificationSent = state;

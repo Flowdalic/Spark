@@ -27,6 +27,9 @@ import org.jivesoftware.spark.SparkManager;
 import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.gateways.GatewayPrivateData;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import java.util.Collection;
@@ -56,7 +59,7 @@ public class TransportUtils {
                 try {
                     gatewayPreferences = (GatewayPrivateData)pdm.getPrivateData(GatewayPrivateData.ELEMENT, GatewayPrivateData.NAMESPACE);
                 }
-                catch (XMPPException | SmackException e) {
+                catch (XMPPException | SmackException | InterruptedException e) {
                     Log.error("Unable to load private data for Gateways", e);
                 }
             //}
@@ -80,7 +83,7 @@ public class TransportUtils {
     		try {
     			pdm.setPrivateData(gatewayPreferences);
     		}
-    		catch (XMPPException | SmackException e) {
+    		catch (XMPPException | SmackException | InterruptedException e) {
     			Log.error(e);
     		}
     	} else {
@@ -129,10 +132,11 @@ public class TransportUtils {
 
         ServiceDiscoveryManager discoveryManager = ServiceDiscoveryManager.getInstanceFor(con);
         try {
-            DiscoverInfo info = discoveryManager.discoverInfo(transport.getServiceName());
+            Jid jid = JidCreate.from(transport.getServiceName());
+            DiscoverInfo info = discoveryManager.discoverInfo(jid);
             return info.containsFeature("jabber:iq:registered");
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e) {
             Log.error(e);
         }
         return false;

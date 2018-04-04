@@ -47,6 +47,10 @@ import org.jivesoftware.sparkimpl.plugin.transcripts.HistoryMessage;
 import org.jivesoftware.sparkimpl.profile.VCardManager;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
@@ -70,7 +74,19 @@ public class ChatRoomImpl extends ChatRoom {
     private Icon tabIcon;
     private String roomTitle;
     private String tabTitle;
+    
+    /**
+     * The participants XMPP address, can be a full or bare JID.
+     * @deprecated use {@link #participantJid} instead.
+     */
+    @Deprecated
     private String participantJID;
+
+    /**
+     * The participants XMPP address, can be a full or bare JID.
+     */
+    private EntityJid participantJid;
+
     private String participantNickname;
 
     private Presence presence;
@@ -115,7 +131,7 @@ public class ChatRoomImpl extends ChatRoom {
     public ChatRoomImpl(final String participantJID, String participantNickname, String title, boolean initUi) {
         this.active = true;
         //activateNotificationTime = System.currentTimeMillis();
-        this.participantJID = participantJID;
+        setParticipantJid(participantJID);
         this.participantNickname = participantNickname;
 
         // Loads the current history for this user.
@@ -123,13 +139,13 @@ public class ChatRoomImpl extends ChatRoom {
 
         // Register StanzaListeners
         final StanzaFilter directFilter = new AndFilter(
-            FromMatchesFilter.create( participantJID ),
+            FromMatchesFilter.create( participantJid ),
             new OrFilter( new StanzaTypeFilter( Presence.class ),
                           new StanzaTypeFilter( Message.class ) )
         );
 
         final StanzaFilter carbonFilter = new AndFilter(
-            FromMatchesFilter.create( SparkManager.getSessionManager().getBareAddress() ), // Security Consideration, see https://xmpp.org/extensions/xep-0280.html#security
+            FromMatchesFilter.create( SparkManager.getSessionManager().getUserAddress() ), // Security Consideration, see https://xmpp.org/extensions/xep-0280.html#security
             new StanzaTypeFilter( Message.class ),
             new OrFilter(
                 new StanzaExtensionFilter( "sent", CarbonExtension.NAMESPACE ),
@@ -153,11 +169,11 @@ public class ChatRoomImpl extends ChatRoom {
         getSplitPane().setDividerSize(0);
 
 
-        presence = PresenceManager.getPresence(participantJID);
+        presence = PresenceManager.getPresence(participantJid.asBareJid());
 
         roster = Roster.getInstanceFor( SparkManager.getConnection() );
 
-        RosterEntry entry = roster.getEntry(participantJID);
+        RosterEntry entry = roster.getEntry(participantJid.asBareJid());
 
         tabIcon = PresenceManager.getIconFromPresence(presence);
 
@@ -187,6 +203,31 @@ public class ChatRoomImpl extends ChatRoom {
 
 
         lastActivity = System.currentTimeMillis();
+    }
+
+    /**
+     * Set the XMPP address of the participant.
+     *
+     * @param jidString the XMPP address
+     * @deprecated use {@link #setParticipantJid(EntityJid)} instead.
+     */
+    @Deprecated
+    private void setParticipantJid(String jidString) {
+        EntityJid jid;
+        try {
+            jid = JidCreate.entityFrom(jidString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
+        setParticipantJid(jid);
+    }
+
+    private void setParticipantJid(Jid jid) {
+        if (!jid.isEntityJid()) {
+            return;
+        }
+        participantJID = jid.toString();
+        participantJid = (EntityJid) jid;
     }
 
     /**
@@ -274,7 +315,7 @@ public class ChatRoomImpl extends ChatRoom {
         //Set message attributes before insertMessage is called - this is useful when transcript window is extended
         //more information will be available to be displayed for the chat area Document
         message.setType(Message.Type.chat);
-        message.setTo(participantJID);
+        message.setTo(participantJid);
         message.setFrom(SparkManager.getSessionManager().getJID());
 
         displaySendMessage( message );
@@ -387,7 +428,7 @@ public class ChatRoomImpl extends ChatRoom {
      */
     public String getJID() {
         presence = PresenceManager.getPresence(getParticipantJID());
-        return presence.getFrom();
+        return presence.getFrom().toString();
     }
 
     /**
@@ -435,7 +476,7 @@ public class ChatRoomImpl extends ChatRoom {
                         if ( message.getError().getCondition() == XMPPError.Condition.item_not_found )
                         {
                             // Check to see if the user is online to recieve this message.
-                            RosterEntry entry = roster.getEntry( participantJID );
+                            RosterEntry entry = roster.getEntry( participantJid.asBareJid() );
                             if ( !presence.isAvailable() && !offlineSent && entry != null )
                             {
                                 getTranscriptWindow().insertNotificationMessage( Res.getString( "message.offline.error" ), ChatManager.ERROR_COLOR );
@@ -446,7 +487,7 @@ public class ChatRoomImpl extends ChatRoom {
                     }
 
                     // Check to see if the user is online to recieve this message.
-                    RosterEntry entry = roster.getEntry( participantJID );
+                    RosterEntry entry = roster.getEntry( participantJid.asBareJid() );
                     if ( !presence.isAvailable() && !offlineSent && entry != null )
                     {
                         getTranscriptWindow().insertNotificationMessage( Res.getString( "message.offline" ), ChatManager.ERROR_COLOR );
@@ -489,13 +530,13 @@ public class ChatRoomImpl extends ChatRoom {
                             if ( carbon.getDirection() == CarbonExtension.Direction.received )
                             {
                                 // This is a stanza that we received from someone on one of our other clients.
-                                participantJID = forwardedStanza.getFrom();
+                                setParticipantJid(forwardedStanza.getFrom());
                                 insertMessage( forwardedStanza );
                             }
                             else
                             {
                                 // This is a stanza that one of our own clients sent.
-                                participantJID = forwardedStanza.getTo();
+                                setParticipantJid(forwardedStanza.getTo());
                                 displaySendMessage( forwardedStanza );
                             }
                             showTyping( false );
@@ -504,7 +545,7 @@ public class ChatRoomImpl extends ChatRoom {
                     else if ( message.getBody() != null )
                     {
                         // If the message is not from the current agent. Append to chat.
-                        participantJID = message.getFrom();
+                        setParticipantJid(message.getFrom());
                         insertMessage( message );
 
                         showTyping( false );
@@ -549,10 +590,10 @@ public class ChatRoomImpl extends ChatRoom {
         getTranscriptWindow().insertMessage(participantNickname, message, ChatManager.FROM_COLOR);
 
         // Set the participant jid to their full JID.
-        participantJID = message.getFrom();
+        setParticipantJid(message.getFrom());
     }
 
-    private void checkEvents(String from, String packetID, MessageEvent messageEvent) {
+    private void checkEvents(Jid from, String packetID, MessageEvent messageEvent) {
         if (messageEvent.isDelivered() || messageEvent.isDisplayed()) {
             // Create the message to send
             Message msg = new Message(from);
@@ -571,7 +612,7 @@ public class ChatRoomImpl extends ChatRoom {
             {
                 SparkManager.getConnection().sendStanza(msg);
             }
-            catch ( SmackException.NotConnectedException e )
+            catch ( SmackException.NotConnectedException | InterruptedException e )
             {
                 Log.warning( "Unable to send message to " + msg.getTo(), e );
             }
@@ -765,7 +806,7 @@ public class ChatRoomImpl extends ChatRoom {
     }
 
     private boolean isOnline() {
-        Presence presence = roster.getPresence(getParticipantJID());
+        Presence presence = roster.getPresence(participantJid.asBareJid());
         return presence.isAvailable();
     }
 
@@ -800,7 +841,7 @@ public class ChatRoomImpl extends ChatRoom {
     }
 
     @Override
-    protected void sendChatState(ChatState state) throws SmackException.NotConnectedException
+    protected void sendChatState(ChatState state) throws SmackException.NotConnectedException, InterruptedException
     {
         if ( !active )
         {

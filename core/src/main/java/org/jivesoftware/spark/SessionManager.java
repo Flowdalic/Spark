@@ -255,11 +255,22 @@ public final class SessionManager implements ConnectionListener {
      * be derek@jivesoftware.com)
      *
      * @return the users bare address.
+     * @deprecated use {@link #getUserAddress()} instead.
      */
+    @Deprecated
     public String getBareAddress() {
         return userBareAddress.toString();
     }
 
+    /**
+     * Returns the users bare address. A bare-address is the address without a resource (ex. derek@jivesoftware.com/spark would
+     * be derek@jivesoftware.com)
+     *
+     * @return the users bare address.
+     */
+    public EntityBareJid getUserAddress() {
+        return userBareAddress;
+    }
 
     /**
      * Returns the Discovered Items.

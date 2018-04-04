@@ -100,7 +100,8 @@ public class GroupChatRoom extends ChatRoom
         SparkManager.getConnection().addAsyncStanzaListener( this, andFilter );
 
         // We are just using a generic Group Chat.
-        tabTitle = XmppStringUtils.parseLocalpart( XmppStringUtils.unescapeLocalpart( chat.getRoom() ) );
+//        tabTitle = XmppStringUtils.parseLocalpart( XmppStringUtils.unescapeLocalpart( chat.getRoom() ) );
+        tabTitle = XmppStringUtils.unescapeLocalpart(chat.getRoom().getLocalpart().toString());
 
         // Room Information
         roomInfo = UIComponentRegistry.createGroupChatParticipantList();
@@ -570,7 +571,7 @@ public class GroupChatRoom extends ChatRoom
      * @param stanza the packet.
      */
     @Override
-    public void processPacket( final Stanza stanza )
+    public void processStanza( final Stanza stanza )
     {
         super.processPacket( stanza );
         if ( stanza instanceof Presence )
@@ -630,7 +631,7 @@ public class GroupChatRoom extends ChatRoom
                         return;
                     }
 
-                    final boolean isFromRoom = !message.getFrom().contains( "/" );
+                    final boolean isFromRoom = !message.getFrom().hasNoResource();
 
                     if ( !isFromRoom && SparkManager.getUserManager().getOccupant( this, from ) == null )
                     {
@@ -653,14 +654,14 @@ public class GroupChatRoom extends ChatRoom
             }
             catch ( ChatRoomNotFoundException e )
             {
-                final String userNickname = XmppStringUtils.parseResource( message.getFrom() );
+                final Resourcepart userNickname = message.getFrom().getResourceOrEmpty();
                 final String roomTitle = userNickname + " - " + XmppStringUtils.parseLocalpart( getRoomname() );
 
                 // Check to see if this is a message notification.
                 if ( message.getBody() != null )
                 {
                     // Create new room
-                    ChatRoom chatRoom = new ChatRoomImpl( message.getFrom(), userNickname, roomTitle );
+                    ChatRoom chatRoom = new ChatRoomImpl( message.getFrom().toString(), userNickname.toString(), roomTitle );
                     SparkManager.getChatManager().getChatContainer().addChatRoom( chatRoom );
 
                     SparkManager.getChatManager().getChatContainer().activateChatRoom( chatRoom );

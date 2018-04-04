@@ -78,6 +78,12 @@ import org.jivesoftware.spark.util.ModelUtil;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 /**
@@ -173,8 +179,8 @@ public class GroupChatParticipantList extends JPanel {
 
 	chat = groupChatRoom.getMultiUserChat();
 
-	chat.addInvitationRejectionListener( ( jid1, message ) -> {
-    String nickname = userManager.getUserNicknameFromJID( jid1 );
+	chat.addInvitationRejectionListener( ( jid1, reason, message, rejection ) -> {
+    String nickname = userManager.getUserNicknameFromJID( jid1.toString() );
 
     userHasLeft(nickname);
 
@@ -516,32 +522,35 @@ groupChatRoom.notifySettingsAccessRight();
 
 	protected void banUser(String displayName) {
 		try {
-			Occupant occupant = chat.getOccupant(userMap.get(displayName));
+		    String entityFullJidString = userMap.get(displayName);
+		    EntityFullJid entityFullJid = JidCreate.entityFullFrom(entityFullJidString);
+			Occupant occupant = chat.getOccupant(entityFullJid);
 			if (occupant != null) {
-				String bareJID = XmppStringUtils
-						.parseBareJid(occupant.getJid());
+				EntityBareJid bareJID = occupant.getJid().asEntityBareJidOrThrow();
 				chat.banUser(bareJID, Res
 						.getString("message.you.have.been.banned"));
 			}
-		} catch (XMPPException | SmackException e) {
+		} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException | IllegalStateException e) {
 		    groupChatRoom.getTranscriptWindow().
 		    insertNotificationMessage("No can do "+e.getMessage(), ChatManager.ERROR_COLOR);
 		}
 	}
 
-	protected void unbanUser(String jid) {
+	protected void unbanUser(String jidString) {
 		try {
+		    Jid jid = JidCreate.from(jidString);
 			chat.grantMembership(jid);
-		} catch (XMPPException | SmackException e) {
+		} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e) {
 		    groupChatRoom.getTranscriptWindow().
 		    insertNotificationMessage("No can do "+e.getMessage(), ChatManager.ERROR_COLOR);
 		}
 	}
 
-	protected void grantVoice(String nickname) {
+	protected void grantVoice(String nicknameString) {
 		try {
+		    Resourcepart nickname = Resourcepart.from(nicknameString);
 			chat.grantVoice(nickname);
-		} catch (XMPPException | SmackException e) {
+		} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e) {
 		    groupChatRoom.getTranscriptWindow().
 		    insertNotificationMessage("No can do "+e.getMessage(), ChatManager.ERROR_COLOR);
 		}
@@ -1024,7 +1033,7 @@ groupChatRoom.notifySettingsAccessRight();
 		while (bannedUsers != null && bannedUsers.hasNext()) {
 		    Affiliate bannedUser = bannedUsers.next();
 		    ImageIcon icon = SparkRes.getImageIcon(SparkRes.RED_BALL);
-		    JMenuItem bannedItem = new JMenuItem(bannedUser.getJid(),
+		    JMenuItem bannedItem = new JMenuItem(bannedUser.getJid().toString(),
 			    icon);
 		    unbanMenu.add(bannedItem);
 		    bannedItem.addActionListener(unbanAction);

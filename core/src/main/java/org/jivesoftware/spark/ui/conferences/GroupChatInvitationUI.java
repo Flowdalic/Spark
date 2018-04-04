@@ -28,6 +28,7 @@ import org.jivesoftware.spark.util.ModelUtil;
 import org.jivesoftware.spark.util.SwingTimerTask;
 import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.JLabel;
@@ -63,6 +64,10 @@ public class GroupChatInvitationUI extends JPanel implements ActionListener {
     private String room;
     private String inviter;
     private String password;
+
+    public GroupChatInvitationUI(EntityBareJid room, String inviter, String password, String reason) {
+        this(room.toString(), inviter, password, reason);
+    }
 
     public GroupChatInvitationUI(String room, String inviter, String password, String reason) {
         setLayout(new GridBagLayout());

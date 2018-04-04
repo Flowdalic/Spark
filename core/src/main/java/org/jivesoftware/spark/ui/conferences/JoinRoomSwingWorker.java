@@ -17,6 +17,7 @@ import org.jivesoftware.spark.util.SwingWorker;
 import org.jivesoftware.spark.util.UIComponentRegistry;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
@@ -57,6 +58,10 @@ public class JoinRoomSwingWorker extends SwingWorker
     public JoinRoomSwingWorker( String roomJID, String password, String tabTitle )
     {
         this( roomJID, null, password, tabTitle );
+    }
+
+    public JoinRoomSwingWorker(EntityBareJid roomJID, String nickname, String password, String tabTitle) {
+        this(roomJID.toString(), nickname, password, tabTitle);
     }
 
     public JoinRoomSwingWorker( String roomJID, String nickname, String password, String tabTitle )

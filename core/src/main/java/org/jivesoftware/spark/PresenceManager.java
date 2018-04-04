@@ -126,7 +126,9 @@ public class PresenceManager {
      *
      * @param jidString the users jid.
      * @return the users presence.
+     * @deprecated use {@link #getPresence(BareJid)} instead.
      */
+    @Deprecated
     public static Presence getPresence(String jidString) {
         if ( jidString == null ) {
             Log.error( "Unable to get the presence of a null jid!" );
@@ -138,12 +140,22 @@ public class PresenceManager {
         } catch (XmppStringprepException e) {
             throw new IllegalStateException(e);
         }
-		if (jid.equals(SparkManager.getSessionManager().getBareAddress())) {
-			return SparkManager.getWorkspace().getStatusBar().getPresence();
-		} else {
-			final Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
-			return roster.getPresence(jid);
-		}
+        return getPresence(jid);
+    }
+
+    /**
+     * Returns the presence of a user.
+     *
+     * @param jidString the users jid.
+     * @return the users presence.
+     */
+    public static Presence getPresence(BareJid jid) {
+        if (jid.equals(SparkManager.getSessionManager().getBareAddress())) {
+            return SparkManager.getWorkspace().getStatusBar().getPresence();
+        } else {
+            final Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
+            return roster.getPresence(jid);
+        }
     }
 
     /**

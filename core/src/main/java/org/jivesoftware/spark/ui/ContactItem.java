@@ -253,11 +253,18 @@ public class ContactItem extends JPanel {
      * return the bare jid.
      *
      * @return the fully qualified jid (ex. derek@jivesoftware.com).
+     * @deprecated use {@link #getJid()} instead.
      */
+    @Deprecated
     public String getJID() {
         return fullyQualifiedJID;
     }
 
+    /**
+     * Return the XMPP address, aka. JID< of this contact item.
+     *
+     * @return the XMPP address of this item.
+     */
     public Jid getJid() {
         return jid;
     }
@@ -635,6 +642,13 @@ public class ContactItem extends JPanel {
         return displayNameLabel;
     }
 
+    /**
+     * Get the JID.
+     *
+     * @return the JID
+     * @deprecated use {@link #getJid()} instead.
+     */
+    @Deprecated
     protected String getFullyQualifiedJID() {
         return fullyQualifiedJID;
     }

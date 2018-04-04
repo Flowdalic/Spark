@@ -59,7 +59,7 @@ public class SoundPlugin implements Plugin, MessageListener, ChatRoomListener {
 
         TaskEngine.getInstance().submit(soundLoader);
 
-        MultiUserChatManager.getInstanceFor(SparkManager.getConnection()).addInvitationListener( ( xmppConnection, muc, string1, string2, string3, message ) -> {
+        MultiUserChatManager.getInstanceFor(SparkManager.getConnection()).addInvitationListener( ( xmppConnection, muc, inviter, reason, password, message, invitation ) -> {
             SoundPreferences preferences = soundPreference.getPreferences();
             if (preferences != null && preferences.playIncomingInvitationSound()) {
                 String incomingSoundFile = preferences.getIncomingInvitationSoundFile();
