@@ -36,8 +36,12 @@ import org.jivesoftware.spark.util.ResourceUtils;
 import org.jivesoftware.spark.util.SwingWorker;
 import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
+import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
@@ -58,9 +62,9 @@ public class BookmarksUI extends JPanel {
 
     private JiveTreeNode rootNode;
 
-    private Collection<String> mucServices;
+    private Collection<DomainBareJid> mucServices;
 
-    private Set<String> autoJoinRooms = new HashSet<>();
+    private Set<EntityBareJid> autoJoinRooms = new HashSet<>();
 
     private List<ContextMenuListener> listeners = new ArrayList<>();
 
@@ -157,12 +161,8 @@ public class BookmarksUI extends JPanel {
         );
         setBackground(Color.white);
 
-        try {
-            manager = BookmarkManager.getBookmarkManager(SparkManager.getConnection());
-        }
-        catch (XMPPException | SmackException e) {
-            Log.error(e);
-        }
+        manager = BookmarkManager.getBookmarkManager(SparkManager.getConnection());
+
         
         final TimerTask bookmarkTask = new TimerTask() {
             @Override
@@ -176,7 +176,7 @@ public class BookmarksUI extends JPanel {
                     }
                     setBookmarks(bc);
                 }
-                catch (XMPPException | SmackException error)
+                catch (XMPPException | SmackException | InterruptedException error)
                 {
                     Log.error(error);
         		}
@@ -246,7 +246,14 @@ public class BookmarksUI extends JPanel {
 				public void actionPerformed(ActionEvent actionEvent) {
                     DefaultTreeModel treeModel = (DefaultTreeModel)tree.getModel();
                     treeModel.removeNodeFromParent(node);
-                    String roomJID = node.getAssociatedObject().toString();
+                    String roomJIDString = node.getAssociatedObject().toString();
+                    EntityBareJid roomJID;
+                    try {
+                        roomJID = JidCreate.entityBareFrom(roomJIDString);
+                    } catch (XmppStringprepException e) {
+                        Log.error("Not a JID", e);
+                        return;
+                    }
                     autoJoinRooms.remove(roomJID);
                     removeBookmark(roomJID);
                 }
@@ -273,7 +280,14 @@ public class BookmarksUI extends JPanel {
 
                     @Override
 					public void actionPerformed(ActionEvent e) {
-                        String roomJID = node.getAssociatedObject().toString();
+                        String roomJIDString = node.getAssociatedObject().toString();
+                        EntityBareJid roomJID;
+                        try {
+                            roomJID = JidCreate.entityBareFrom(roomJIDString);
+                        } catch (XmppStringprepException e1) {
+                            Log.error("Not a JID", e1);
+                            return;
+                        }
                         if (autoJoinRooms.contains(roomJID)) {
                             autoJoinRooms.remove(roomJID);
                         }
@@ -289,7 +303,14 @@ public class BookmarksUI extends JPanel {
                 autoJoin.putValue(Action.NAME, Res.getString("menuitem.join.on.startup"));
 
                 JCheckBoxMenuItem item = new JCheckBoxMenuItem(autoJoin);
-                String roomJID = node.getAssociatedObject().toString();
+                String roomJIDString = node.getAssociatedObject().toString();
+                EntityBareJid roomJID;
+                try {
+                    roomJID = JidCreate.entityBareFrom(roomJIDString);
+                } catch (XmppStringprepException e1) {
+                    Log.error("Not a JID", e1);
+                    return;
+                }
                 item.setSelected(autoJoinRooms.contains(roomJID));
                 popupMenu.add(item);
 
@@ -330,10 +351,10 @@ public class BookmarksUI extends JPanel {
             public Object construct() {
                 try {
                     if (SparkManager.getConnection().isConnected()) {
-                        mucServices = MultiUserChatManager.getInstanceFor( SparkManager.getConnection() ).getServiceNames();
+                        mucServices = MultiUserChatManager.getInstanceFor( SparkManager.getConnection() ).getXMPPServiceDomains();
                     }
                 }
-                catch (XMPPException | SmackException e) {
+                catch (XMPPException | SmackException | InterruptedException e) {
                     Log.error("Unable to load MUC Service Names.", e);
                 }
                 return mucServices;
@@ -392,7 +413,7 @@ public class BookmarksUI extends JPanel {
         return roomNode;
     }
 
-    public void addBookmark(String roomName, String roomJID, boolean autoJoin) {
+    public void addBookmark(String roomName, EntityBareJid roomJID, boolean autoJoin) {
         try {
             if (autoJoin)
             {
@@ -401,12 +422,12 @@ public class BookmarksUI extends JPanel {
             manager.addBookmarkedConference(roomName, roomJID, autoJoin, null, null);
             fireBookmarksAdded(roomJID);  //fire bookmark event
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);
         }
     }
 
-    public void removeBookmark(String roomJID) {
+    public void removeBookmark(EntityBareJid roomJID) {
         try {
             if (autoJoinRooms.contains(roomJID))
             {
@@ -415,7 +436,7 @@ public class BookmarksUI extends JPanel {
             manager.removeBookmarkedConference(roomJID);
             fireBookmarksRemoved(roomJID); // fire bookmark remove event
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);
         }
     }
@@ -462,7 +483,8 @@ public class BookmarksUI extends JPanel {
                             ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(SparkManager.getConnection());
 
                             try {
-                                discoInfo = discoManager.discoverInfo(conferenceService);
+                                Jid conferenceServiceJid = JidCreate.from(conferenceService);
+                                discoInfo = discoManager.discoverInfo(conferenceServiceJid);
                                 for (DiscoverInfo.Identity identity : discoInfo.getIdentities() ) {
                                     if ("conference".equals(identity.getCategory())) {
                                         serviceList.add(conferenceService);
@@ -482,7 +504,7 @@ public class BookmarksUI extends JPanel {
                                     }
                                 }
                             }
-                            catch (XMPPException | SmackException e1) {
+                            catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e1) {
                                 Log.error("Error in disco discovery.", e1);
                             }
                             return true;
@@ -576,28 +598,28 @@ public class BookmarksUI extends JPanel {
     public void setBookmarks(Collection<BookmarkedConference> bookmarks) {
 
         for (BookmarkedConference bookmark : bookmarks) {
-            String serviceName = XmppStringUtils.parseDomain(bookmark.getJid());
-            String roomJID = bookmark.getJid();
-            String roomName = XmppStringUtils.parseLocalpart(bookmark.getJid());
+            DomainBareJid serviceName = bookmark.getJid().asDomainBareJid();
+            EntityBareJid roomJID = bookmark.getJid();
+            Localpart roomName = roomJID.getLocalpart();
 
             if (bookmark.isAutoJoin()) {
-                ConferenceUtils.joinConferenceOnSeperateThread(roomName, bookmark.getJid(), bookmark.getPassword());
+                ConferenceUtils.joinConferenceOnSeperateThread(roomName.toString(), bookmark.getJid().toString(), bookmark.getPassword());
                 ConferenceUtils.addUnclosableChatRoom(roomJID);
                 autoJoinRooms.add(bookmark.getJid());
             }
 
             // Get Service Node
-            TreePath path = tree.findByName(tree, new String[]{rootNode.getUserObject().toString(), serviceName});
+            TreePath path = tree.findByName(tree, new String[]{rootNode.getUserObject().toString(), serviceName.toString()});
             JiveTreeNode serviceNode;
             if (path == null) {
-                serviceNode = addServiceToList(serviceName);
-                path = tree.findByName(tree, new String[]{rootNode.getUserObject().toString(), serviceName});
+                serviceNode = addServiceToList(serviceName.toString());
+                path = tree.findByName(tree, new String[]{rootNode.getUserObject().toString(), serviceName.toString()});
             }
             else {
                 serviceNode = (JiveTreeNode)path.getLastPathComponent();
             }
 
-            addBookmark(serviceNode, roomName, roomJID);
+            addBookmark(serviceNode, roomName.toString(), roomJID.toString());
 
             tree.expandPath(path);
         }
@@ -608,7 +630,7 @@ public class BookmarksUI extends JPanel {
      *
      * @return a collection of MUC services.
      */
-    public Collection<String> getMucServices() {
+    public Collection<DomainBareJid> getMucServices() {
         return mucServices;
     }
 
@@ -663,13 +685,13 @@ public class BookmarksUI extends JPanel {
         bookmarkListeners.remove(bookmarkListener);
     }
 
-    private void fireBookmarksAdded( String roomJID )
+    private void fireBookmarksAdded(EntityBareJid roomJID )
     {
         for ( final BookmarksListener listener : bookmarkListeners )
         {
             try
             {
-                listener.bookmarkAdded( roomJID );
+                listener.bookmarkAdded( roomJID.toString() );
             }
             catch ( Exception e )
             {
@@ -678,13 +700,13 @@ public class BookmarksUI extends JPanel {
         }
     }
 
-    private void fireBookmarksRemoved( String roomJID )
+    private void fireBookmarksRemoved(EntityBareJid roomJID )
     {
         for ( final BookmarksListener listener : bookmarkListeners )
         {
             try
             {
-                listener.bookmarkRemoved( roomJID );
+                listener.bookmarkRemoved( roomJID.toString() );
             }
             catch ( Exception e )
             {
@@ -701,7 +723,7 @@ public class BookmarksUI extends JPanel {
         try {
             return manager.getBookmarkedConferences();
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);
         }
         return Collections.emptyList();

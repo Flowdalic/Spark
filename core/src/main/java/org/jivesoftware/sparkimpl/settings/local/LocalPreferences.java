@@ -727,10 +727,12 @@ public class LocalPreferences {
 				"15"));
 	}
 
+	// TODO: nickname should be of type Resourcepart.
 	public void setNickname(String nickname) {
 		props.setProperty("nickname", nickname);
 	}
 
+	// TODO: Return type should be Resourcepart.
 	public String getNickname() {
 		return props.getProperty("nickname", SparkManager.getUserManager()
 				.getNickname());

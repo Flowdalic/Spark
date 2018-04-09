@@ -76,6 +76,11 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.layout.LayoutSettingsManager;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 /**
@@ -346,7 +351,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
         try {
             try {
                 String roomName = room.getName();
-                String roomJID = room.getJid();
+                EntityBareJid roomJID = room.getJid();
                 int numberOfOccupants = -1;
                 if (stillSearchForOccupants) {
                 RoomInfo roomInfo = null;
@@ -387,7 +392,13 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
             return;
         }
 
-        final String roomJID = roomsTable.getValueAt(selectedRow, 2) + "@" + serviceName;
+        final String roomJIDString = roomsTable.getValueAt(selectedRow, 2) + "@" + serviceName;
+        EntityBareJid roomJID;
+        try {
+            roomJID = JidCreate.entityBareFrom(roomJIDString);
+        } catch (XmppStringprepException e1) {
+            throw new IllegalStateException(e1);
+        }
         final String roomName = roomsTable.getValueAt(selectedRow, 1).toString();
 
         // Check to see what type of room this is.
@@ -436,7 +447,13 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
             roomsTable.getTableModel().setValueAt(new JLabel(SparkRes.getImageIcon(SparkRes.BLANK_IMAGE)), selectedRow, 0);
             addBookmarkUI(true);
 
-            String jid = (String) node.getAssociatedObject();
+            String jidString = (String) node.getAssociatedObject();
+            EntityBareJid jid;
+            try {
+                jid = JidCreate.entityBareFrom(jidString);
+            } catch (XmppStringprepException e) {
+                throw new IllegalStateException(e);
+            }
             conferences.removeBookmark(jid);
         }
     }
@@ -464,8 +481,15 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
             if (selectedRow != -1) {
                 joinRoomButton.setEnabled(true);
                 joinRoomItem.setEnabled(true);
-                String roomJID = roomsTable.getValueAt(selectedRow,
+                String roomJIDString = roomsTable.getValueAt(selectedRow,
                     2) + "@" + serviceName;
+                EntityBareJid roomJID;
+                try {
+                    roomJID = JidCreate.entityBareFrom(roomJIDString);
+                } catch (XmppStringprepException ex) {
+                    Log.error("Not a JID", ex);
+                    return;
+                }
                 addRoomButton.setEnabled(true);
                 addRoomItem.setEnabled(true);
                 if (isBookmarked(roomJID)) {
@@ -510,7 +534,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
                             for (HostedRoom room : rooms) {
 
                             String roomName = room.getName();
-                            String roomJID = room.getJid();
+                            EntityBareJid roomJID = room.getJid();
 
                             int numberOfOccupants = -1;
 
@@ -729,7 +753,13 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
                 popupMenu.add(roomInfoAction);
                 final JCheckBoxMenuItem autoJoin = new JCheckBoxMenuItem(Res.getString("menuitem.join.on.startup"));
                 autoJoin.addActionListener( e1 -> {
-                    String roomJID = roomsTable.getValueAt(selectedRow, 2) + "@" + serviceName;
+                    String roomJIDString = roomsTable.getValueAt(selectedRow, 2) + "@" + serviceName;
+                    EntityBareJid roomJID;
+                    try {
+                        roomJID = JidCreate.entityBareFrom(roomJIDString);
+                    } catch (XmppStringprepException e2) {
+                        throw new IllegalStateException(e2);
+                    }
                     conferences.removeBookmark(roomJID);
                     conferences.addBookmark(roomName, roomJID, autoJoin.isSelected());
                 } );
@@ -794,7 +824,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
      * @throws Exception
      *             if a problem occurs while getting the room list
      */
-    private static Collection<HostedRoom> getRoomList(String serviceName)
+    private static Collection<HostedRoom> getRoomList(DomainBareJid serviceName)
 	    throws Exception {
         return MultiUserChatManager.getInstanceFor( SparkManager.getConnection() ).getHostedRooms( serviceName );
     }
@@ -814,7 +844,8 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 	    try {
 		GroupChatRoom room = UIComponentRegistry.createGroupChatRoom(groupChat);
 
-		groupChat.create(pref.getNickname());
+		Resourcepart nickname = Resourcepart.from(pref.getNickname());
+		groupChat.create(nickname);
 		chatManager.getChatContainer().addChatRoom(room);
 		chatManager.getChatContainer().activateChatRoom(room);
 
@@ -836,7 +867,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 		}
 
 		List<String> owners = new ArrayList<>();
-		owners.add(SparkManager.getSessionManager().getBareAddress());
+		owners.add(SparkManager.getSessionManager().getUserAddress().toString());
 		form.setAnswer("muc#roomconfig_roomowners", owners);
 
 		// new DataFormDialog(groupChat, form);
@@ -865,7 +896,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
      *            the number of occupants in the conference room. If -1 is
      *            specified, the the occupant count will show as n/a.
      */
-    private void addRoomToTable(final String jid, final String roomName,
+    private void addRoomToTable(final EntityBareJid jid, final String roomName,
 	    final int numberOfOccupants) {
         SwingWorker addRoomThread = new SwingWorker() {
 
@@ -928,10 +959,10 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
      *            the jid of the room to check.
      * @return true if the room is bookmarked.
      */
-    private boolean isBookmarked(String roomJID) {
+    private boolean isBookmarked(EntityBareJid roomJID) {
 	for (Object o : conferences.getBookmarks()) {
 	    BookmarkedConference bk = (BookmarkedConference) o;
-	    String jid = bk.getJid();
+	    EntityBareJid jid = bk.getJid();
 	    if (jid != null && roomJID.equals(jid)) {
 		return true;
 	    }
@@ -947,7 +978,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
      * @param roomjid
      * @return
      */
-    private boolean isPasswordProtected(String roomjid) {
+    private boolean isPasswordProtected(EntityBareJid roomjid) {
 	boolean result = false;
 	try {
 
@@ -1002,7 +1033,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 
     private class RoomObject {
 	private String roomName;
-	private String roomJID;
+	private EntityBareJid roomJID;
 
 	int numberOfOccupants;
 
@@ -1014,11 +1045,11 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 	    this.roomName = roomName;
 	}
 
-	public String getRoomJID() {
+	public EntityBareJid getRoomJID() {
 	    return roomJID;
 	}
 
-	public void setRoomJID(String roomJID) {
+	public void setRoomJID(EntityBareJid roomJID) {
 	    this.roomJID = roomJID;
 	}
 

@@ -148,7 +148,7 @@ public class UserSearchService implements Searchable {
                     // Check that the search service belongs to user searches (and not room searches or other searches)
                     for (DiscoverInfo.Identity identity : info.getIdentities() ) {
                         if ("directory".equals(identity.getCategory()) && "user".equals(identity.getType())) {
-                            searchServices.add(item.getEntityID());
+                            searchServices.add(item.getEntityID().toString());
                         }
                     }
                 }

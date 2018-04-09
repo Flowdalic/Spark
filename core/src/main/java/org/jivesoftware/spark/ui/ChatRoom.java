@@ -39,6 +39,7 @@ import org.jivesoftware.spark.util.UIComponentRegistry;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityBareJid;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -899,8 +900,17 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
      * Get the roomname to use for this ChatRoom. This is expected to be a bare jid.
      *
      * @return - the Roomname of this ChatRoom.
+     * @deprecated use {@link #getRoomJid()} instead.
      */
+    @Deprecated
     public abstract String getRoomname();
+
+    /**
+     * Get the XMPP address of this room.
+     *
+     * @return the XMPP address of this room
+     */
+    public abstract EntityBareJid getRoomJid();
 
     /**
      * Get the title to use in the tab holding this ChatRoom.

@@ -42,6 +42,9 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.privacy.PrivacyManager;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
@@ -366,11 +369,23 @@ public class ConferenceUtils {
 
     }
 
-    final static List<String> unclosableChatRooms = new ArrayList<>();
-	public synchronized static void addUnclosableChatRoom(String jid) {
+    final static List<EntityBareJid> unclosableChatRooms = new ArrayList<>();
+	public synchronized static void addUnclosableChatRoom(EntityBareJid jid) {
 		unclosableChatRooms.add(jid);
 	}
 
+	public static void addUnclosableChatRoom(String jidString) {
+	    EntityBareJid jid;
+        try {
+            jid = JidCreate.entityBareFrom(jidString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalArgumentException(e);
+        }
+	    synchronized (ConferenceUtils.class) {
+	        unclosableChatRooms.add(jid);
+	    }
+	}
+	
 	public static boolean isChatRoomClosable(Component c) {
 		if(c instanceof GroupChatRoom ) {
 			GroupChatRoom groupChatRoom = (GroupChatRoom) c;
