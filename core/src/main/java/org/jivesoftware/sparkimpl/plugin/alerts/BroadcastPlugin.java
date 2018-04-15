@@ -89,6 +89,9 @@ import org.jivesoftware.sparkimpl.preference.sounds.SoundPreference;
 import org.jivesoftware.sparkimpl.preference.sounds.SoundPreferences;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.util.XmppStringUtils;
 import org.jivesoftware.spark.ui.BroadcastHistoryFrame;
 
@@ -264,7 +267,7 @@ public class BroadcastPlugin extends SparkTabHandler implements Plugin, StanzaLi
 
         buf.append(body);
 
-        String from = message.getFrom() != null ? message.getFrom().toString() : "";
+        Jid from = message.getFrom();
 
         final TranscriptWindow window = new TranscriptWindow();
         window.insertNotificationMessage(buf.toString(), ChatManager.TO_COLOR);
@@ -313,9 +316,9 @@ public class BroadcastPlugin extends SparkTabHandler implements Plugin, StanzaLi
      * @param from
      *            the sender
      */
-    private void userToUserBroadcast(Message message, Type type, String from) {
-	String jid = XmppStringUtils.parseBareJid(from);
-	String nickname = SparkManager.getUserManager().getUserNicknameFromJID(jid);
+    private void userToUserBroadcast(Message message, Type type, Jid from) {
+	BareJid jid = jid.asBareJid();
+	Resourcepart nickname = SparkManager.getUserManager().getUserNicknameAsResourcepartFromJID(jid);
 	ChatManager chatManager = SparkManager.getChatManager();
 	ChatContainer container = chatManager.getChatContainer();
 

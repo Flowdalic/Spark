@@ -31,6 +31,8 @@ import org.jivesoftware.spark.util.ResourceUtils;
 import org.jivesoftware.spark.util.SwingWorker;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.AbstractAction;
@@ -245,7 +247,7 @@ final class InvitationDialog extends JPanel {
         return bookmarkedConf;
     }
 
-    public void inviteUsersToRoom(final String serviceName, Collection<BookmarkedConference> rooms, String adHocRoomName, Collection<String> jids) {
+    public void inviteUsersToRoom(final String serviceName, Collection<BookmarkedConference> rooms, String adHocRoomName, Collection<Jid> jids) {
         fillRoomsUI(rooms, adHocRoomName);
 
 
@@ -256,8 +258,8 @@ final class InvitationDialog extends JPanel {
 
         // Add jids to user list
         if (jids != null) {
-            for (Object jid : jids) {
-                invitedUsers.addElement(jid);
+            for (Jid jid : jids) {
+                invitedUsers.addElement(jid.toString());
             }
         }
 
@@ -315,7 +317,7 @@ final class InvitationDialog extends JPanel {
                     pane.setValue(JOptionPane.UNINITIALIZED_VALUE);
                     return;
                 }
-                String roomName = "";
+                EntityBareJid roomName = null;
 
                 // Add all rooms the user is in to list.
                 ChatManager chatManager = SparkManager.getChatManager();

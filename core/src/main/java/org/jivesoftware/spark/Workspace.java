@@ -67,6 +67,7 @@ import org.jivesoftware.sparkimpl.plugin.bookmarks.BookmarkPlugin;
 import org.jivesoftware.sparkimpl.plugin.gateways.GatewayPlugin;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
 import org.jivesoftware.sparkimpl.plugin.transcripts.ChatTranscriptPlugin;
+import org.jxmpp.jid.BareJid;
 import org.jxmpp.util.XmppStringUtils;
 
 /**
@@ -417,7 +418,7 @@ public class Workspace extends JPanel implements StanzaListener {
      * @param bareJID the bareJID of the anonymous user.
      * @param message the message from the anonymous user.
      */
-    private void createOneToOneRoom(String bareJID, Message message) {
+    private void createOneToOneRoom(BareJid bareJID, Message message) {
         ContactItem contact = contactList.getContactItemByJID(bareJID);
         String nickname = XmppStringUtils.parseLocalpart(bareJID);
         if (contact != null) {
@@ -452,7 +453,7 @@ public class Workspace extends JPanel implements StanzaListener {
     }
 
 
-    private void insertMessage(final String bareJID, final Message message) throws ChatRoomNotFoundException {
+    private void insertMessage(final BareJid bareJID, final Message message) throws ChatRoomNotFoundException {
         ChatRoom chatRoom = SparkManager.getChatManager().getChatContainer().getChatRoom(bareJID);
         chatRoom.insertMessage(message);
         int chatLength = chatRoom.getTranscriptWindow().getDocument().getLength();

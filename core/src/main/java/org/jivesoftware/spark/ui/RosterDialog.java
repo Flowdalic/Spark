@@ -75,6 +75,10 @@ import org.jivesoftware.sparkimpl.plugin.gateways.Gateway;
 import org.jivesoftware.sparkimpl.plugin.gateways.transports.Transport;
 import org.jivesoftware.sparkimpl.plugin.gateways.transports.TransportUtils;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
 
@@ -379,8 +383,15 @@ public class RosterDialog implements ActionListener {
 
             jid = UserManager.escapeJID(jid);
 
+			BareJid bareJid;
+			try {
+				bareJid = JidCreate.bareFrom(jid);
+			} catch (XmppStringprepException e) {
+				throw new IllegalStateException(e);
+			}
+
             // Add as a new entry
-            addRosterEntry(jid, nickname, group);
+            addRosterEntry(bareJid, nickname, group);
         }
         else {
             String jid = getJID();
@@ -393,7 +404,13 @@ public class RosterDialog implements ActionListener {
 
             String nickname = nicknameField.getText();
             String group = (String)groupBox.getSelectedItem();
-            addRosterEntry(jid, nickname, group);
+			BareJid bareJid;
+			try {
+				bareJid = JidCreate.bareFrom(jid);
+			} catch (XmppStringprepException e) {
+				throw new IllegalStateException(e);
+			}
+            addRosterEntry(bareJid, nickname, group);
         }
     }
 
@@ -406,7 +423,7 @@ public class RosterDialog implements ActionListener {
         return jidField.getText().trim();
     }
 
-    private void addRosterEntry(final String jid, final String nickname, final String group) {
+    private void addRosterEntry(final BareJid jid, final String nickname, final String group) {
         final SwingWorker rosterEntryThread = new SwingWorker() {
             public Object construct() {
                 return addEntry(jid, nickname, group);
@@ -522,7 +539,7 @@ public class RosterDialog implements ActionListener {
      * @param group    the contact group.
      * @return the new RosterEntry.
      */
-    public RosterEntry addEntry(String jid, String nickname, String group) {
+    public RosterEntry addEntry(BareJid jid, String nickname, String group) {
         String[] groups = {group};
 
         Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
@@ -537,7 +554,7 @@ public class RosterDialog implements ActionListener {
             try {
                 roster.createEntry(jid, nickname, new String[]{group});
             }
-            catch (XMPPException | SmackException e) {
+            catch (XMPPException | SmackException | InterruptedException e) {
                 Log.error("Unable to add new entry " + jid, e);
             }
             return roster.getEntry(jid);
@@ -561,7 +578,7 @@ public class RosterDialog implements ActionListener {
 
             userEntry = roster.getEntry(jid);
         }
-        catch (XMPPException | SmackException ex) {
+        catch (XMPPException | SmackException | InterruptedException ex) {
             Log.error(ex);
         }
         return userEntry;
@@ -621,9 +638,10 @@ public class RosterDialog implements ActionListener {
 	    // Try to load nickname from VCard
 	    VCard vcard = new VCard();
 	    try {
-		vcard.load(SparkManager.getConnection(), contact);
+			EntityBareJid contactJid = JidCreate.entityBareFrom(contact);
+			vcard.load(SparkManager.getConnection(), contactJid);
 		nickname = vcard.getNickName();
-	    } catch (XMPPException | SmackException e1) {
+	    } catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e1) {
 		Log.error(e1);
 	    }
 	    // If no nickname, use first name.

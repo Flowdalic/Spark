@@ -52,6 +52,7 @@ import org.jivesoftware.spark.util.ModelUtil;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.layout.LayoutSettingsManager;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
+import org.jxmpp.jid.BareJid;
 import org.jivesoftware.resource.Default;
 
 /**
@@ -301,8 +302,8 @@ public class VCardEditor {
      * @param parent
      *            the parent component, used for location handling.
      */
-    public void displayProfile(final String jid, VCard vcard, JComponent parent) {
-	VCardViewer viewer = new VCardViewer(jid);
+    public void displayProfile(final BareJid jid, VCard vcard, JComponent parent) {
+	VCardViewer viewer = new VCardViewer(jid.toString());
 
 	final JFrame dlg = new JFrame(Res.getString("title.view.profile.for",
 		jid));

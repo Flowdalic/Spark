@@ -66,9 +66,8 @@ public class ContactItem extends JPanel {
     private String nickname;
     private String alias;
 
-    // TODO: This should probably be of type BareJid.
-    private final String fullyQualifiedJID;
-    private final Jid jid;
+
+    private final BareJid jid;
 
 	private JLabel specialImageLabel;
     private Icon icon;
@@ -92,7 +91,7 @@ public class ContactItem extends JPanel {
 
     private boolean avatarsShowing;
 
-	public ContactItem(String alias, String nickname, String fullyQualifiedJID) {
+	public ContactItem(String alias, String nickname, BareJid fullyQualifiedJID) {
 		this(alias, nickname, fullyQualifiedJID, true);
 	}
 
@@ -101,9 +100,9 @@ public class ContactItem extends JPanel {
      *
      * @param alias             the alias of the contact
      * @param nickname          the nickname of the contact.
-     * @param fullyQualifiedJID the fully-qualified jid of the contact (ex. derek@jivesoftware.com)
+     * @param jid               the fully-qualified jid of the contact (ex. derek@jivesoftware.com)
      */
-    public ContactItem(String alias, String nickname, String fullyQualifiedJID, boolean initUi) {
+    public ContactItem(String alias, String nickname, BareJid jid, boolean initUi) {
         setLayout(new GridBagLayout());
 
         // Set Default Font
@@ -119,12 +118,7 @@ public class ContactItem extends JPanel {
 
         this.alias = alias;
         this.nickname = nickname;
-        this.fullyQualifiedJID = fullyQualifiedJID;
-        try {
-            jid = JidCreate.from(fullyQualifiedJID);
-        } catch (XmppStringprepException e) {
-            throw new IllegalStateException(e);
-        }
+        this.jid = jid;
 
         if (initUi) {
 		displayNameLabel = new JLabel();
@@ -257,7 +251,7 @@ public class ContactItem extends JPanel {
      */
     @Deprecated
     public String getJID() {
-        return fullyQualifiedJID;
+        return getJid().toString();
     }
 
     /**
@@ -265,7 +259,7 @@ public class ContactItem extends JPanel {
      *
      * @return the XMPP address of this item.
      */
-    public Jid getJid() {
+    public BareJid getJid() {
         return jid;
     }
 
@@ -416,14 +410,14 @@ public class ContactItem extends JPanel {
             }
         }
 
-        return SparkManager.getVCardManager().getAvatarURLIfAvailable(getJID());
+        return SparkManager.getVCardManager().getAvatarURLIfAvailable(getJid());
     }
 
     /**
      * Persists the avatar locally based on the new hash.
      */
     private void updateAvatar() {
-    	SparkManager.getVCardManager().addToQueue(getJID());
+    	SparkManager.getVCardManager().addToQueue(getJid().asBareJid());
     }
 
     public String toString() {
@@ -650,7 +644,7 @@ public class ContactItem extends JPanel {
      */
     @Deprecated
     protected String getFullyQualifiedJID() {
-        return fullyQualifiedJID;
+        return jid.toString();
     }
 
     protected void setDisplayNameLabel(JLabel displayNameLabel) {

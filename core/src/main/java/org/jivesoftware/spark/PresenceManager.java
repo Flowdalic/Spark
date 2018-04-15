@@ -25,6 +25,7 @@ import org.jivesoftware.smackx.muc.packet.MUCUser;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
@@ -159,23 +160,19 @@ public class PresenceManager {
     }
 
     /**
-     * Returns the fully qualified jid of a user.
+     * Returns the fully qualified jid of a user. May return {@code null}.
      *
      * @param jidString the users bare jid (ex. derek@jivesoftware.com)
-     * @return the fully qualified jid of a user (ex. derek@jivesoftware.com --> derek@jivesoftware.com/spark)
+     * @return the fully qualified jid of a user (ex. derek@jivesoftware.com --> derek@jivesoftware.com/spark) or {@code null}.
      */
-    public static String getFullyQualifiedJID(String jidString) {
-        BareJid jid;
-        try {
-            jid = JidCreate.bareFrom(jidString);
-        } catch (XmppStringprepException e) {
-            throw new IllegalStateException(e);
-        }
+    public static EntityFullJid getFullyQualifiedJID(BareJid jid) {
         final Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
         Presence presence = roster.getPresence(jid);
-        return presence.getFrom().toString();
+        Jid result = presence.getFrom();
+        EntityFullJid entityFullJid = result.asEntityFullJidIfPossible();
+        return entityFullJid;
     }
-    
+
 	public static String getJidFromMUCPresence(Presence presence) {		
 		Collection<ExtensionElement> extensions = presence.getExtensions();
 		for (ExtensionElement extension : extensions) {

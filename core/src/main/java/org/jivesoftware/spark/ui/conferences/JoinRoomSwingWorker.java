@@ -18,7 +18,8 @@ import org.jivesoftware.spark.util.UIComponentRegistry;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
 import org.jxmpp.jid.EntityBareJid;
-import org.jxmpp.util.XmppStringUtils;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -41,8 +42,8 @@ import java.util.List;
 public class JoinRoomSwingWorker extends SwingWorker
 {
     private final List<String> errors = new ArrayList<>();
-    private final String roomJID;
-    private String nickname;
+    private final EntityBareJid roomJID;
+    private Resourcepart nickname;
     private String password;
     private final String tabTitle;
 
@@ -50,21 +51,17 @@ public class JoinRoomSwingWorker extends SwingWorker
 
     private SwingWorker followUp;
 
-    public JoinRoomSwingWorker( String roomJID )
+    public JoinRoomSwingWorker( EntityBareJid roomJID )
     {
-        this( roomJID, null, null, XmppStringUtils.parseLocalpart( roomJID ) );
+        this( roomJID, null, null, roomJID.getLocalpart().toString() );
     }
 
-    public JoinRoomSwingWorker( String roomJID, String password, String tabTitle )
+    public JoinRoomSwingWorker( EntityBareJid roomJID, String password, String tabTitle )
     {
         this( roomJID, null, password, tabTitle );
     }
 
-    public JoinRoomSwingWorker(EntityBareJid roomJID, String nickname, String password, String tabTitle) {
-        this(roomJID.toString(), nickname, password, tabTitle);
-    }
-
-    public JoinRoomSwingWorker( String roomJID, String nickname, String password, String tabTitle )
+    public JoinRoomSwingWorker( EntityBareJid roomJID, Resourcepart nickname, String password, String tabTitle )
     {
         this.roomJID = roomJID;
         this.nickname = nickname;
@@ -97,7 +94,7 @@ public class JoinRoomSwingWorker extends SwingWorker
             ChatRoom room;
             try
             {
-                final String roomName = XmppStringUtils.parseBareJid( groupChat.getRoom() );
+                final EntityBareJid roomName = groupChat.getRoom();
                 room = SparkManager.getChatManager().getChatContainer().getChatRoom( roomName );
             }
             catch ( ChatRoomNotFoundException e )
@@ -108,9 +105,9 @@ public class JoinRoomSwingWorker extends SwingWorker
             }
 
             // Use the default nickname, if none has been provided.
-            if ( !ModelUtil.hasLength( nickname ) )
+            if ( nickname == null )
             {
-                nickname = SettingsManager.getRelodLocalPreferences().getNickname().trim();
+                nickname = SettingsManager.getRelodLocalPreferences().getNicknameAsResourcepart();
             }
 
             // Join the MUC server-sided, if we're not already in.
@@ -146,7 +143,7 @@ public class JoinRoomSwingWorker extends SwingWorker
             }
             return room;
         }
-        catch ( XMPPException | SmackException ex )
+        catch ( XMPPException | SmackException | InterruptedException ex )
         {
             Log.error( "An exception occurred while trying to join room '" + roomJID + "'.", ex );
             XMPPError error = null;
@@ -169,7 +166,11 @@ public class JoinRoomSwingWorker extends SwingWorker
                     if ( userInput != null )
                     {
                         Log.debug( "Retry joining room '" + roomJID + "', using nickname: " + userInput );
-                        this.nickname = (String) userInput;
+                        try {
+                            this.nickname = Resourcepart.from((String) userInput);
+                        } catch (XmppStringprepException e) {
+                            throw new IllegalStateException(e);
+                        }
                         return construct();
                     }
                 }

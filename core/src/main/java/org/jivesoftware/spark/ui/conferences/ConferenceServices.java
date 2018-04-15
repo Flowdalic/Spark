@@ -29,6 +29,7 @@ import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jivesoftware.smackx.muc.packet.MUCUser;
 import org.jivesoftware.spark.ChatManager;
 import org.jivesoftware.spark.SparkManager;
 import org.jivesoftware.spark.Workspace;
@@ -44,6 +45,12 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.alerts.SparkToaster;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
@@ -96,7 +103,7 @@ public class ConferenceServices implements InvitationListener {
                         final Presence p = new Presence(presence.getType(), presence.getStatus(), priority, presence.getMode());
 
                         GroupChatRoom groupChatRoom = (GroupChatRoom)room;
-                        String jid = groupChatRoom.getMultiUserChat().getRoom();
+                        EntityBareJid jid = groupChatRoom.getMultiUserChat().getRoom();
 
                         p.setTo(jid);
                         try
@@ -203,12 +210,12 @@ public class ConferenceServices implements InvitationListener {
         return true;
     }
 
-    public static String getDefaultServiceName() {
-        String serviceName = null;
-        Collection<String> services = bookmarksUI.getMucServices();
+    public static DomainBareJid getDefaultServiceName() {
+        DomainBareJid serviceName = null;
+        Collection<DomainBareJid> services = bookmarksUI.getMucServices();
         if (services != null) {
-            for (Object service : services) {
-                serviceName = (String) service;
+            for (DomainBareJid service : services) {
+                serviceName = service;
                 break;
             }
         }
@@ -273,21 +280,21 @@ public class ConferenceServices implements InvitationListener {
 
     private void startConference(Collection<ContactItem> items) {
         final ContactList contactList = SparkManager.getWorkspace().getContactList();
-        List<String> jids = new ArrayList<>();
+        List<Jid> jids = new ArrayList<>();
         for (ContactItem item : items) {
             ContactGroup contactGroup = contactList.getContactGroup(item.getGroupName());
             contactGroup.clearSelection();
 
             if (item.isAvailable()) {
-                jids.add(item.getJID());
+                jids.add(item.getJid());
             }
         }
 
         String userName = XmppStringUtils.parseLocalpart(SparkManager.getSessionManager().getJID());
-        final String roomName = userName + "_" + StringUtils.randomString(3);
+        final EntityBareJid roomName = JidCreate.entityBareFrom(userName + "_" + StringUtils.randomString(3));
 
-        String serviceName = getDefaultServiceName();
-        if (ModelUtil.hasLength(serviceName)) {
+        DomainBareJid serviceName = getDefaultServiceName();
+        if (serviceName != null) {
             ConferenceUtils.inviteUsersToRoom(serviceName, roomName, jids, true);
         }
     }
@@ -302,7 +309,7 @@ public class ConferenceServices implements InvitationListener {
                 // check if the "default" bookmarked conference is still in the bookmarks list:
                 if (implicitBookmarkedJID != null && implicitBookmarkedJID.trim().length() > 0) {
                     for (BookmarkedConference bc : bookmarkedConfs) {
-                        if (implicitBookmarkedJID.equalsIgnoreCase(bc.getJid())) {
+                        if (implicitBookmarkedJID.equalsIgnoreCase(bc.getJid().toString())) {
                             bookmarkedConference = bc;
                             break;
                         }
@@ -403,8 +410,9 @@ public class ConferenceServices implements InvitationListener {
     }
 
     @Override
-    public void invitationReceived(final XMPPConnection conn, final MultiUserChat room, final String inviter, final String reason,
-	    final String password, final Message message) {
+    public void invitationReceived(final XMPPConnection conn, final MultiUserChat room, final EntityJid inviterEntity, final String reason,
+	    final String password, final Message message, MUCUser.Invite invitation) {
+        EntityBareJid inviter = inviterEntity.asEntityBareJid(); 
 	SwingUtilities.invokeLater( () -> {
     Collection<RoomInvitationListener> listeners = new ArrayList<>( SparkManager
             .getChatManager().getInvitationListeners() );
@@ -427,7 +435,7 @@ public class ConferenceServices implements InvitationListener {
     final GroupChatInvitationUI invitationUI = new GroupChatInvitationUI(room.getRoom(), inviter, password, reason);
     String message1 = Res.getString("message.invite.to.groupchat", inviter);
     String title = Res.getString("title.group.chat");
-    String bareJID = XmppStringUtils.parseBareJid(inviter);
+    EntityBareJid bareJID = inviter.asEntityBareJid();
 
     if (_localPreferences.isAutoAcceptMucInvite()) {
         ConferenceUtils.enterRoomOnSameThread(XmppStringUtils.parseLocalpart(room.getRoom()), room.getRoom(), password);
@@ -464,7 +472,7 @@ public class ConferenceServices implements InvitationListener {
         groupChatRoom.getSplitPane().setDividerSize(5);
         groupChatRoom.getVerticalSlipPane().setDividerLocation(0.6);
         groupChatRoom.getSplitPane().setDividerLocation(0.6);
-        String roomName = XmppStringUtils.parseLocalpart(room.getRoom());
+        Localpart roomName = room.getRoom().getLocalpart();
         groupChatRoom.setTabTitle(roomName);
         groupChatRoom.getToolBar().setVisible(true);
         SparkManager.getChatManager().getChatContainer().addChatRoom(groupChatRoom);

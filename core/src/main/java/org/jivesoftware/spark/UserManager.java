@@ -32,8 +32,12 @@ import org.jivesoftware.spark.util.SwingTimerTask;
 import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.profile.VCardManager;
+import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Domainpart;
+import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
@@ -101,9 +105,9 @@ public class UserManager {
         return username;
     }
     
-    public String getNickname(String fullJID) {
+    public String getNickname(BareJid jid) {
     	String vcardNickname = null;
-        VCard vCard = SparkManager.getVCardManager().getVCard(fullJID);
+        VCard vCard = SparkManager.getVCardManager().getVCard(jid);
         if (vCard != null && vCard.getError() == null) {
             String firstName = vCard.getFirstName();
             String lastName = vCard.getLastName();
@@ -142,7 +146,7 @@ public class UserManager {
      * @param nickname      the user's nickname.
      * @return true if the user is an owner.
      */
-    public boolean isOwner(GroupChatRoom groupChatRoom, String nickname)
+    public boolean isOwner(GroupChatRoom groupChatRoom, Resourcepart nickname)
     {
         return isOwner( getOccupant( groupChatRoom, nickname ) );
     }
@@ -176,7 +180,7 @@ public class UserManager {
      * @param nickname      the nickname of the user.
      * @return true if the user is a moderator.
      */
-    public boolean isModerator(GroupChatRoom groupChatRoom, String nickname)
+    public boolean isModerator(GroupChatRoom groupChatRoom, Resourcepart nickname)
     {
         return isModerator( getOccupant( groupChatRoom, nickname ) );
     }
@@ -219,13 +223,8 @@ public class UserManager {
      * @param nickname      the users nickname.
      * @return the Occupant found.
      */
-    public Occupant getOccupant(GroupChatRoom groupChatRoom, String nickname) {
-        EntityFullJid userJID;
-        try {
-            userJID = JidCreate.entityFullFrom(groupChatRoom.getRoomname() + "/" + nickname);
-        } catch (XmppStringprepException e) {
-            throw new IllegalArgumentException(e);
-        }
+    public Occupant getOccupant(GroupChatRoom groupChatRoom, Resourcepart nickname) {
+        EntityFullJid userJID = JidCreate.entityFullFrom(groupChatRoom.getRoomname(), nickname);
         Occupant occ = null;
         try {
             occ = groupChatRoom.getMultiUserChat().getOccupant(userJID);
@@ -283,8 +282,21 @@ public class UserManager {
         return new ArrayList<>();
     }
 
+    /**
+     * @deprecated use {@link #getUserNicknameFromJID(BareJid)} instead.
+     */
+    @Deprecated
+    public String getUserNicknameFromJID(CharSequence jid) {
+        BareJid bareJid;
+        try {
+            bareJid = JidCreate.bareFrom(jid);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
+        return getUserNicknameFromJID(bareJid);
+    }
 
-    public String getUserNicknameFromJID(String jid) {
+    public String getUserNicknameFromJID(BareJid jid) {
         ContactList contactList = SparkManager.getWorkspace().getContactList();
         ContactItem item = contactList.getContactItemByJID(jid);
         if (item != null) {
@@ -292,6 +304,17 @@ public class UserManager {
         }
 
         return unescapeJID(jid);
+    }
+
+    public Resourcepart getUserNicknameAsResourcepartFromJID(BareJid jid) {
+        String nicknameString = getUserNicknameFromJID(jid);
+        Resourcepart resourcepart;
+        try {
+            resourcepart = Resourcepart.from(nicknameString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
+        return resourcepart;
     }
 
     /**
@@ -314,21 +337,33 @@ public class UserManager {
         return builder.toString();
     }
 
+    public static String unescapeJID(CharSequence jid) {
+        BareJid bareJid;
+        try {
+            bareJid = JidCreate.bareFrom(jid);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
+        return unescapeJID(bareJid);
+    }
+
     /**
      * Unescapes a complete JID by examing the node itself and unescaping when necessary.
      *
      * @param jid the users jid.
      * @return the unescaped JID.
      */
-    public static String unescapeJID(String jid) {
+    public static String unescapeJID(BareJid jid) {
         if (jid == null) {
             return null;
         }
 
         final StringBuilder builder = new StringBuilder();
-        String node = XmppStringUtils.parseLocalpart(jid);
-        String restOfJID = jid.substring(node.length());
-        builder.append(XmppStringUtils.unescapeLocalpart(node));
+        Localpart node = jid.getLocalpartOrNull();
+        Domainpart restOfJID = jid.getDomain();
+        if (node != null) {
+            builder.append(XmppStringUtils.unescapeLocalpart(node.toString()));
+        }
         builder.append(restOfJID);
         return builder.toString();
     }
@@ -340,7 +375,7 @@ public class UserManager {
      * @param displayName the displayed name of the user.
      * @return the full jid w/ resource of the user.
      */
-    public String getJIDFromDisplayName(String displayName) {
+    public String getJIDFromDisplayName(Resourcepart displayName) {
         ContactList contactList = SparkManager.getWorkspace().getContactList();
         ContactItem item = contactList.getContactItemByDisplayName(displayName);
         if (item != null) {

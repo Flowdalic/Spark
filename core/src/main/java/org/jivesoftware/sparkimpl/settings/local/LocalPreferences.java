@@ -33,6 +33,8 @@ import javax.swing.UIManager;
 
 import org.jivesoftware.spark.util.Encryptor;
 import org.jivesoftware.spark.util.log.Log;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 /**
  * Represents the LocalPreference Model for this system.
@@ -736,6 +738,17 @@ public class LocalPreferences {
 	public String getNickname() {
 		return props.getProperty("nickname", SparkManager.getUserManager()
 				.getNickname());
+	}
+
+	public Resourcepart getNicknameAsResourcepart() {
+		String nicknameString = getNickname();
+		Resourcepart nickname;
+		try {
+			nickname = Resourcepart.from(nicknameString);
+		} catch (XmppStringprepException e) {
+			throw new IllegalStateException(e);
+		}
+		return nickname;
 	}
 
 	public void setShowToasterPopup(boolean show) {

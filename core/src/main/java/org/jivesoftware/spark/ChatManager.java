@@ -182,6 +182,10 @@ public class ChatManager implements ChatManagerListener {
         return chatContainer;
     }
 
+	public GroupChatRoom getGroupChat(EntityBareJid roomAddress) throws ChatNotFoundException {
+		return getGroupChat(roomAddress.toString());
+	}
+
     /**
      * Returns the MultiUserChat associated with the specified roomname.
      *
@@ -212,7 +216,7 @@ public class ChatManager implements ChatManagerListener {
      * @param title    the title to use for the room.
      * @return the newly created <code>ChatRoom</code>.
      */
-    public ChatRoom createChatRoom(String userJID, String nickname, String title) {
+    public ChatRoom createChatRoom(BareJid userJID, String nickname, String title) {
         ChatRoom chatRoom;
         try {
             chatRoom = getChatContainer().getChatRoom(userJID);

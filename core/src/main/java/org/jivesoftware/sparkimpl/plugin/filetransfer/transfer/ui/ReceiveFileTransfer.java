@@ -71,6 +71,7 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.filetransfer.transfer.Downloads;
 
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.BareJid;
 import org.jxmpp.util.XmppStringUtils;
 
 public class ReceiveFileTransfer extends JPanel {
@@ -484,7 +485,7 @@ public class ReceiveFileTransfer extends JPanel {
 
         showAlert(true);
 
-        String bareJID = XmppStringUtils.parseBareJid(request.getRequestor());
+        BareJid bareJID = request.getRequestor().asBareJid();
 
         ContactList contactList = SparkManager.getWorkspace().getContactList();
         ContactItem contactItem = contactList.getContactItemByJID(bareJID);

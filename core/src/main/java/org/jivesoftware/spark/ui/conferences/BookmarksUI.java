@@ -320,7 +320,13 @@ public class BookmarksUI extends JPanel {
 
                     @Override
 					public void actionPerformed(ActionEvent actionEvent) {
-                        String roomJID = node.getAssociatedObject().toString();
+                        String roomJIDString = node.getAssociatedObject().toString();
+                        EntityBareJid roomJID;
+                        try {
+                            roomJID = JidCreate.entityBareFrom(roomJIDString);
+                        } catch (XmppStringprepException e) {
+                            throw new IllegalStateException(e);
+                        }
                         RoomBrowser roomBrowser = new RoomBrowser();
                         roomBrowser.displayRoomInformation(roomJID);
                     }
@@ -339,7 +345,17 @@ public class BookmarksUI extends JPanel {
         }
     }
 
-    public void browseRooms(String serviceName) {
+    public void browseRooms(String serviceNameString) {
+        DomainBareJid serviceName;
+        try {
+            serviceName = JidCreate.domainBareFrom(serviceNameString);
+        } catch (XmppStringprepException e) {
+            throw new IllegalStateException(e);
+        }
+        browseRooms(serviceName);
+    }
+
+    public void browseRooms(DomainBareJid serviceName) {
         ConferenceRoomBrowser rooms = new ConferenceRoomBrowser(this, serviceName);
         rooms.invoke();
     }

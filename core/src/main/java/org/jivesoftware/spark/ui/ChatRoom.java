@@ -40,6 +40,7 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.parts.Resourcepart;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -527,9 +528,9 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
      *
      * @return the nickname of the agent.
      */
-    public String getNickname() {
+    public Resourcepart getNickname() {
         LocalPreferences pref = SettingsManager.getLocalPreferences();
-        return pref.getNickname();
+        return pref.getNicknameAsResourcepart();
     }
 
 
@@ -903,7 +904,7 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
      * @deprecated use {@link #getRoomJid()} instead.
      */
     @Deprecated
-    public abstract String getRoomname();
+    public abstract EntityBareJid getRoomname();
 
     /**
      * Get the XMPP address of this room.

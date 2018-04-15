@@ -115,7 +115,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
     private JDialog dlg;
 
     private BookmarksUI conferences;
-    private String serviceName;
+    private DomainBareJid serviceName;
 
     private int allButtonWidth;
     private int threeButtonWidth;
@@ -138,7 +138,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
      *
      */
     public ConferenceRoomBrowser(BookmarksUI conferences,
-	    final String serviceName) {
+            final DomainBareJid serviceName) {
 
 	this.setLayout(new BorderLayout());
 
@@ -316,7 +316,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
        clearTable.start();
    }
 
-    private void refreshRoomList(final String serviceName) {
+    private void refreshRoomList(final DomainBareJid serviceName) {
         startLoadingImg();
         clearTable();
 
@@ -382,7 +382,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
         return result;
     }
 
-    private void bookmarkRoom(String serviceName) {
+    private void bookmarkRoom(DomainBareJid serviceName) {
         int selectedRow = roomsTable.getSelectedRow();
         
         UIManager.put("OptionPane.okButtonText", Res.getString("ok"));
@@ -418,7 +418,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
         Tree serviceTree = conferences.getTree();
         JiveTreeNode rootNode = (JiveTreeNode) serviceTree.getModel().getRoot();
 
-        TreePath rootPath = serviceTree.findByName(serviceTree, new String[] { rootNode.toString(), serviceName });
+        TreePath rootPath = serviceTree.findByName(serviceTree, new String[] { rootNode.toString(), serviceName.toString() });
 
         boolean isBookmarked = isBookmarked(roomJID);
 
@@ -738,7 +738,13 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
                     public void actionPerformed(ActionEvent actionEvent) {
                         int selectedRow = roomsTable.getSelectedRow();
                         if (selectedRow != -1) {
-                            String roomJID = roomsTable.getValueAt(selectedRow, 2) + "@" + serviceName;
+                            String roomJIDString = roomsTable.getValueAt(selectedRow, 2) + "@" + serviceName;
+                            EntityBareJid roomJID;
+                            try {
+                                roomJID = JidCreate.entityBareFrom(roomJIDString);
+                            } catch (XmppStringprepException e) {
+                                throw new IllegalStateException(e);
+                            }
                             RoomBrowser roomBrowser = new RoomBrowser();
                             roomBrowser.displayRoomInformation(roomJID);
                         }

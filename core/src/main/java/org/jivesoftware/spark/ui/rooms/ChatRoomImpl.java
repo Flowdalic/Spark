@@ -47,9 +47,11 @@ import org.jivesoftware.sparkimpl.plugin.transcripts.HistoryMessage;
 import org.jivesoftware.sparkimpl.profile.VCardManager;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
@@ -70,7 +72,7 @@ import java.util.List;
 public class ChatRoomImpl extends ChatRoom {
     private static final long serialVersionUID = 6163762803773980872L;
     private List<MessageEventListener> messageEventListeners = new ArrayList<>();
-    private String roomname;
+    private EntityBareJid roomname;
     private Icon tabIcon;
     private String roomTitle;
     private String tabTitle;
@@ -87,7 +89,7 @@ public class ChatRoomImpl extends ChatRoom {
      */
     private EntityJid participantJid;
 
-    private String participantNickname;
+    private Resourcepart participantNickname;
 
     private Presence presence;
 
@@ -112,7 +114,7 @@ public class ChatRoomImpl extends ChatRoom {
     
     private JComponent chatStatePanel;    
 
-    public ChatRoomImpl(final String participantJID, String participantNickname, String title) {
+    public ChatRoomImpl(final EntityBareJid participantJID, Resourcepart participantNickname, CharSequence title) {
         this(participantJID, participantNickname, title, true);
     }
 
@@ -128,7 +130,7 @@ public class ChatRoomImpl extends ChatRoom {
      * @param participantNickname the nickname of the participant.
      * @param title               the title of the room.
      */
-    public ChatRoomImpl(final String participantJID, String participantNickname, String title, boolean initUi) {
+    public ChatRoomImpl(final EntityJid participantJID, Resourcepart participantNickname, CharSequence title, boolean initUi) {
         this.active = true;
         //activateNotificationTime = System.currentTimeMillis();
         setParticipantJid(participantJID);
@@ -155,14 +157,11 @@ public class ChatRoomImpl extends ChatRoom {
 
         SparkManager.getConnection().addSyncStanzaListener( this, new OrFilter( directFilter, carbonFilter ) );
 
-        // The roomname will be the participantJID
-        this.roomname = participantJID;
-
         // Use the agents username as the Tab Title
-        this.tabTitle = title;
+        this.tabTitle = title.toString();
 
         // The name of the room will be the node of the user jid + conversation.
-        this.roomTitle = participantNickname;
+        this.roomTitle = participantNickname.toString();
 
         // Add RoomInfo
         this.getSplitPane().setRightComponent(null);
@@ -187,20 +186,19 @@ public class ChatRoomImpl extends ChatRoom {
             infoButton.addActionListener(this);
         }
 
-        // If the user is not in the roster, then allow user to add them.
-        addToRosterButton = new ChatRoomButton("", SparkRes.getImageIcon(SparkRes.ADD_IMAGE_24x24));
-        if (entry == null && !XmppStringUtils.parseResource(participantJID).equals(participantNickname)) {
-            addToRosterButton.setToolTipText(Res.getString("message.add.this.user.to.your.roster"));
-            if (!Default.getBoolean("ADD_CONTACT_DISABLED") && Enterprise.containsFeature(Enterprise.ADD_CONTACTS_FEATURE)) addChatRoomButton(addToRosterButton);
-            addToRosterButton.addActionListener(this);
-        }
-
         // If this is a private chat from a group chat room, do not show toolbar.
-        privateChat = XmppStringUtils.parseResource(participantJID).equals(participantNickname);
+        privateChat = participantNickname.equals(participantJID.getResourceOrNull());
         if ( privateChat ) {
             getToolBar().setVisible(false);
         }
 
+        // If the user is not in the roster, then allow user to add them.
+        addToRosterButton = new ChatRoomButton("", SparkRes.getImageIcon(SparkRes.ADD_IMAGE_24x24));
+        if (entry == null && !privateChat) {
+            addToRosterButton.setToolTipText(Res.getString("message.add.this.user.to.your.roster"));
+            if (!Default.getBoolean("ADD_CONTACT_DISABLED") && Enterprise.containsFeature(Enterprise.ADD_CONTACTS_FEATURE)) addChatRoomButton(addToRosterButton);
+            addToRosterButton.addActionListener(this);
+        }
 
         lastActivity = System.currentTimeMillis();
     }
@@ -227,7 +225,7 @@ public class ChatRoomImpl extends ChatRoom {
             return;
         }
         participantJID = jid.toString();
-        participantJid = (EntityJid) jid;
+        participantJid = jid.asEntityBareJidIfPossible();
     }
 
     /**
@@ -368,7 +366,8 @@ public class ChatRoomImpl extends ChatRoom {
         scrollToBottom();
     }
 
-    public String getRoomname() {
+    @Override
+    public EntityBareJid getRoomname() {
         return roomname;
     }
 

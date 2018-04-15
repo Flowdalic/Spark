@@ -49,6 +49,7 @@ import org.jivesoftware.spark.util.UIComponentRegistry;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.parts.Resourcepart;
@@ -281,7 +282,7 @@ public class GroupChatRoom extends ChatRoom
                     final Form form = chat.getConfigurationForm().createAnswerForm();
                     new DataFormDialog( chatFrame, chat, form );
                 }
-                catch ( XMPPException | SmackException xmpe )
+                catch ( XMPPException | SmackException | InterruptedException xmpe )
                 {
                     getTranscriptWindow().insertNotificationMessage( xmpe.getMessage(), ChatManager.ERROR_COLOR );
                     scrollToBottom();
@@ -321,7 +322,7 @@ public class GroupChatRoom extends ChatRoom
 
                 new AnswerFormDialog( chatFrame, chat, form );
             }
-            catch ( XMPPException | SmackException xmpe )
+            catch ( XMPPException | SmackException | InterruptedException xmpe )
             {
                 getTranscriptWindow().insertNotificationMessage( xmpe.getMessage(), ChatManager.ERROR_COLOR );
                 scrollToBottom();
@@ -400,7 +401,7 @@ public class GroupChatRoom extends ChatRoom
 
             chat.sendMessage( message );
         }
-        catch ( SmackException ex )
+        catch ( SmackException | InterruptedException ex )
         {
             Log.error( "Unable to send message in conference chat.", ex );
         }
@@ -427,9 +428,9 @@ public class GroupChatRoom extends ChatRoom
      * @return the roomname.
      */
     @Override
-    public String getRoomname()
+    public EntityBareJid getRoomname()
     {
-        return XmppStringUtils.parseBareJid( chat.getRoom() );
+        return chat.getRoom();
     }
 
     /**
@@ -438,7 +439,7 @@ public class GroupChatRoom extends ChatRoom
      * @return the nickname of the agent in this groupchat
      */
     @Override
-    public String getNickname()
+    public Resourcepart getNickname()
     {
         return chat.getNickname();
     }
@@ -480,9 +481,9 @@ public class GroupChatRoom extends ChatRoom
      *
      * @param tabTitle the title to use on the tab.
      */
-    public void setTabTitle( String tabTitle )
+    public void setTabTitle( CharSequence tabTitle )
     {
-        this.tabTitle = tabTitle;
+        this.tabTitle = tabTitle.toString();
     }
 
     /**
@@ -614,14 +615,14 @@ public class GroupChatRoom extends ChatRoom
 
             if ( ModelUtil.hasLength( message.getBody() ) )
             {
-                final String from = XmppStringUtils.parseResource( message.getFrom() );
+                final Resourcepart from = message.getFrom().getResourceOrThrow();
 
                 if ( inf != null )
                 {
                     // This is part of the MUC history. No need to add it to the transcript again.
 
                     // Add to the UI component that shows the chat.
-                    getTranscriptWindow().insertHistoryMessage( from, message.getBody(), sentDate );
+                    getTranscriptWindow().insertHistoryMessage( from.toString(), message.getBody(), sentDate );
                 }
                 else
                 {
@@ -655,7 +656,7 @@ public class GroupChatRoom extends ChatRoom
             catch ( ChatRoomNotFoundException e )
             {
                 final Resourcepart userNickname = message.getFrom().getResourceOrEmpty();
-                final String roomTitle = userNickname + " - " + XmppStringUtils.parseLocalpart( getRoomname() );
+                final String roomTitle = userNickname + " - " + getRoomname();
 
                 // Check to see if this is a message notification.
                 if ( message.getBody() != null )
@@ -1135,7 +1136,7 @@ public class GroupChatRoom extends ChatRoom
     /**
      * Returns the Color to use. Use Color.blue for yourself
      */
-    public Color getColor( String nickname )
+    public Color getColor( Resourcepart nickname )
     {
         if ( nickname.equals( this.getNickname() ) )
         {
@@ -1179,7 +1180,7 @@ public class GroupChatRoom extends ChatRoom
     }
 
     @Override
-    protected void sendChatState(ChatState state) throws SmackException.NotConnectedException
+    protected void sendChatState(ChatState state) throws SmackException.NotConnectedException, InterruptedException
     {
         if (!chatStatEnabled || !SparkManager.getConnection().isConnected() )
         {
@@ -1192,10 +1193,10 @@ public class GroupChatRoom extends ChatRoom
             return;
         }
 
-        for ( final String occupant : chat.getOccupants() )
+        for ( final EntityFullJid occupant : chat.getOccupants() )
         {
-            final String occupantNickname = XmppStringUtils.parseResource(occupant);
-            final String myNickname = chat.getNickname();
+            final Resourcepart occupantNickname = occupant.getResourcepart();
+            final Resourcepart myNickname = chat.getNickname();
             if (occupantNickname != null && !occupantNickname.equals(myNickname))
             {
                 SparkManager.getMessageEventManager().sendComposingNotification(occupant, "djn");

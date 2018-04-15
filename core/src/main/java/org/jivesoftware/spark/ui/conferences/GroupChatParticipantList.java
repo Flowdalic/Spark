@@ -81,6 +81,7 @@ import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Resourcepart;
@@ -421,13 +422,14 @@ groupChatRoom.notifySettingsAccessRight();
 		return null;
 	}
 
-	protected void startChat(ChatRoom groupChat, String groupJID) {
-		String userNickname = XmppStringUtils.parseResource(groupJID);
+	protected void startChat(ChatRoom groupChat, EntityFullJid groupJID) {
+		Resourcepart userNickname = groupJID.getResourcepart();
 		String roomTitle = userNickname + " - "
-				+ XmppStringUtils.parseLocalpart(groupChat.getRoomname());
+				+ groupChat.getRoomJid();
 
-		String nicknameOfUser = XmppStringUtils.parseResource(groupJID);
-		String nickname = groupChat.getNickname();
+		// TODO: Remove duplicate variable userNickname and nicknameOfUser.
+		Resourcepart nicknameOfUser = userNickname;
+		Resourcepart nickname = groupChat.getNickname();
 
 		if (nicknameOfUser.equals(nickname)) {
 			return;
@@ -440,7 +442,7 @@ groupChatRoom.notifySettingsAccessRight();
 			Log.debug("Could not find chat room - " + groupJID);
 
 			// Create new room
-			chatRoom = new ChatRoomImpl(groupJID, nicknameOfUser, roomTitle);
+			chatRoom = new ChatRoomImpl(groupJID.asEntityBareJid(), nicknameOfUser, roomTitle);
 			chatManager.getChatContainer().addChatRoom(chatRoom);
 		}
 
@@ -468,14 +470,13 @@ groupChatRoom.notifySettingsAccessRight();
 		return this;
 	}
 
-	protected void kickUser(String nicknameString) {
+	protected void kickUser(Resourcepart nickname) {
 		try {
-		    Resourcepart nickname = Resourcepart.from(nicknameString);
 			chat.kickParticipant(nickname, Res
 					.getString("message.you.have.been.kicked"));
-		} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e) {
+		} catch (XMPPException | SmackException | InterruptedException e) {
 			groupChatRoom.insertText(Res.getString("message.kicked.error",
-					nicknameString));
+					nickname));
 		}
 	}
 
@@ -505,49 +506,45 @@ groupChatRoom.notifySettingsAccessRight();
 		}
 	}
 
-	protected void grantVoice(String nicknameString) {
+	protected void grantVoice(Resourcepart nickname) {
 		try {
-		    Resourcepart nickname = Resourcepart.from(nicknameString);
 			chat.grantVoice(nickname);
-		} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e) {
+		} catch (XMPPException | SmackException | InterruptedException e) {
 		    groupChatRoom.getTranscriptWindow().
 		    insertNotificationMessage("No can do "+e.getMessage(), ChatManager.ERROR_COLOR);
 		}
 	}
 
-	protected void revokeVoice(String nicknameString) {
+	protected void revokeVoice(Resourcepart nickname) {
 		try {
-		    Resourcepart nickname = Resourcepart.from(nicknameString);
 			chat.revokeVoice(Collections.singleton(nickname));
-		} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e) {
+		} catch (XMPPException | SmackException  | InterruptedException e) {
 		    groupChatRoom.getTranscriptWindow().
 		    insertNotificationMessage("No can do "+e.getMessage(), ChatManager.ERROR_COLOR);
 		}
 	}
 
-	protected void grantModerator(String nicknameString) {
+	protected void grantModerator(Resourcepart nickname) {
 	try {
-        Resourcepart nickname = Resourcepart.from(nicknameString);
 	    chat.grantModerator(Collections.singleton(nickname));
-	} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e) {
+	} catch (XMPPException | SmackException | InterruptedException e) {
 	    groupChatRoom.getTranscriptWindow().insertNotificationMessage(
 		    "No can do " + e.getMessage(), ChatManager.ERROR_COLOR);
 	}
     }
 
-	protected void revokeModerator(String nicknameString) {
+	protected void revokeModerator(Resourcepart nickname) {
 	try {
-        Resourcepart nickname = Resourcepart.from(nicknameString);
 	    chat.revokeModerator(Collections.singleton(nickname));
-	} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e) {
+	} catch (XMPPException | SmackException | InterruptedException e) {
 	    groupChatRoom.getTranscriptWindow().insertNotificationMessage(
 		    "No can do " + e.getMessage(), ChatManager.ERROR_COLOR);
 	}
     }
 
-	protected void grantMember(String nicknameString) {
+	protected void grantMember(Resourcepart nickname) {
 	try {
-	    Occupant o = userManager.getOccupant(groupChatRoom, nicknameString);
+	    Occupant o = userManager.getOccupant(groupChatRoom, nickname);
 	    BareJid bareJid = o.getJid().asBareJid();
 	    chat.grantMembership(Collections.singleton(bareJid));
 
@@ -556,9 +553,9 @@ groupChatRoom.notifySettingsAccessRight();
 		    "No can do " + e.getMessage(), ChatManager.ERROR_COLOR);
 	}
     }
-	protected void revokeMember(String nicknameString) {
+	protected void revokeMember(Resourcepart nickname) {
 	try {
-	    Occupant o = userManager.getOccupant(groupChatRoom, nicknameString);
+	    Occupant o = userManager.getOccupant(groupChatRoom, nickname);
         BareJid bareJid = o.getJid().asBareJid();
 	    chat.revokeMembership(Collections.singleton(bareJid));
 	} catch (XMPPException | SmackException | InterruptedException e) {
@@ -567,9 +564,9 @@ groupChatRoom.notifySettingsAccessRight();
 	}
     }
 
-	protected void grantAdmin(String nicknameString) {
+	protected void grantAdmin(Resourcepart nickname) {
 	try {
-	    Occupant o = userManager.getOccupant(groupChatRoom, nicknameString);
+	    Occupant o = userManager.getOccupant(groupChatRoom, nickname);
         BareJid bareJid = o.getJid().asBareJid();
 	    chat.grantAdmin(Collections.singleton(bareJid));
 	} catch (XMPPException | SmackException | InterruptedException e) {
@@ -577,9 +574,9 @@ groupChatRoom.notifySettingsAccessRight();
 		    "No can do " + e.getMessage(), ChatManager.ERROR_COLOR);
 	}
     }
-	protected void revokeAdmin(String nicknameString) {
+	protected void revokeAdmin(Resourcepart nickname) {
 	try {
-	    Occupant o = userManager.getOccupant(groupChatRoom, nicknameString);
+	    Occupant o = userManager.getOccupant(groupChatRoom, nickname);
         BareJid bareJid = o.getJid().asBareJid();
 	    chat.revokeAdmin(Collections.singleton(bareJid));
 	} catch (XMPPException | SmackException | InterruptedException e) {
@@ -588,9 +585,9 @@ groupChatRoom.notifySettingsAccessRight();
 	}
     }
 
-	protected void grantOwner(String nicknameString) {
+	protected void grantOwner(Resourcepart nickname) {
 	try {
-	    Occupant o = userManager.getOccupant(groupChatRoom, nicknameString);
+	    Occupant o = userManager.getOccupant(groupChatRoom, nickname);
         BareJid bareJid = o.getJid().asBareJid();
 	    chat.grantOwnership(Collections.singleton(bareJid));
 	} catch (XMPPException | SmackException | InterruptedException e) {
@@ -598,9 +595,9 @@ groupChatRoom.notifySettingsAccessRight();
 		    "No can do " + e.getMessage(), ChatManager.ERROR_COLOR);
 	}
     }
-	protected void revokeOwner(String nicknameString) {
+	protected void revokeOwner(Resourcepart nickname) {
 	try {
-	    Occupant o = userManager.getOccupant(groupChatRoom, nicknameString);
+	    Occupant o = userManager.getOccupant(groupChatRoom, nickname);
         BareJid bareJid = o.getJid().asBareJid();
 	    chat.revokeOwnership(Collections.singleton(bareJid));
 	} catch (XMPPException | SmackException | InterruptedException e) {
@@ -618,21 +615,21 @@ groupChatRoom.notifySettingsAccessRight();
 	if (index != -1) {
 	    participantsList.setSelectedIndex(index);
 	    final JLabel userLabel = (JLabel) model.getElementAt(index);
-	    final String selectedUser = userLabel.getText();
+	    final Resourcepart selectedUser = Resourcepart.from(userLabel.getText());
 	    final String groupJID = userMap.get(selectedUser);
 	    String groupJIDNickname = XmppStringUtils.parseResource(groupJID);
 
-	    final String nickname = groupChatRoom.getNickname();
+	    final Resourcepart nickname = groupChatRoom.getNickname();
 	    final Occupant occupant = userManager.getOccupant(groupChatRoom,
 		    selectedUser);
 	    final boolean iamAdmin = SparkManager.getUserManager().isAdmin(
 		    groupChatRoom, chat.getNickname().toString());
-	    final boolean iamOwner = SparkManager.getUserManager().isOwner(groupChatRoom, chat.getNickname().toString());
+	    final boolean iamOwner = SparkManager.getUserManager().isOwner(groupChatRoom, chat.getNickname());
 
 	    final boolean iamAdminOrOwner = iamAdmin || iamOwner;
 
 	    final boolean iamModerator = SparkManager.getUserManager()
-		    .isModerator(groupChatRoom, chat.getNickname().toString());
+		    .isModerator(groupChatRoom, chat.getNickname());
 
 	    final boolean userIsMember = SparkManager.getUserManager().isMember(occupant);
 

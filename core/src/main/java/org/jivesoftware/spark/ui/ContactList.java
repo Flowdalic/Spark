@@ -324,20 +324,20 @@ public class ContactList extends JPanel implements ActionListener,
         // If so, remove from offline group and add to all groups they
         // belong to.
 
-        if (presence.getType() == Presence.Type.available && offlineGroup.getContactItemByJID(bareJID.toString()) != null || ( presence.getFrom().toString().contains( "workgroup." ) )) {
-            changeOfflineToOnline(bareJID.toString(), entry, presence);
+        if (presence.getType() == Presence.Type.available && offlineGroup.getContactItemByJID(bareJID) != null || ( presence.getFrom().toString().contains( "workgroup." ) )) {
+            changeOfflineToOnline(bareJID, entry, presence);
         }
         else if (presence.getType() == Presence.Type.available) {
-            updateContactItemsPresence(presence, entry, bareJID.toString());
+            updateContactItemsPresence(presence, entry, bareJID);
         }
         else if (presence.getType() == Presence.Type.unavailable && !isPending) {
             // If not available, move to offline group.
-            Presence rosterPresence = PresenceManager.getPresence(bareJID.toString());
+            Presence rosterPresence = PresenceManager.getPresence(bareJID);
             if (!rosterPresence.isAvailable()) {
                 moveToOfflineGroup(presence, bareJID.toString());
             }
             else {
-                updateContactItemsPresence(rosterPresence, entry, bareJID.toString());
+                updateContactItemsPresence(rosterPresence, entry, bareJID);
             }
         }
         
@@ -350,7 +350,7 @@ public class ContactList extends JPanel implements ActionListener,
      * @param entry    the roster entry being updated.
      * @param bareJID  the bare jid of the user.
      */
-    private void updateContactItemsPresence(Presence presence, RosterEntry entry, String bareJID) {
+    private void updateContactItemsPresence(Presence presence, RosterEntry entry, BareJid bareJID) {
         for (ContactGroup group : groupList) {
             ContactItem item = group.getContactItemByJID(bareJID);
             if (item != null) {
@@ -370,7 +370,7 @@ public class ContactList extends JPanel implements ActionListener,
      * @param presence the users presence.
      * @param bareJID  the bareJID of the user.
      */
-    private void moveToOfflineGroup(final Presence presence, final String bareJID) {
+    private void moveToOfflineGroup(final Presence presence, final BareJid bareJID) {
         for (ContactGroup grpItem : new ArrayList<>( groupList )) {
             final ContactGroup group = grpItem;
             final ContactItem item = group.getContactItemByJID(bareJID);
@@ -399,7 +399,7 @@ public class ContactList extends JPanel implements ActionListener,
                             group.removeContactItem(item);
                             checkGroup(group);
 
-                            if (offlineGroup.getContactItemByJID(item.getJID()) == null) {
+                            if (offlineGroup.getContactItemByJID(item.getJid()) == null) {
                                 moveToOffline(item);
                                 offlineGroup.fireContactGroupUpdated();
                             }
@@ -422,7 +422,7 @@ public class ContactList extends JPanel implements ActionListener,
      * @param entry    the <code>RosterEntry</code> of the user.
      * @param presence the users presence.
      */
-    private void changeOfflineToOnline(String bareJID, final RosterEntry entry, Presence presence) {
+    private void changeOfflineToOnline(BareJid bareJID, final RosterEntry entry, Presence presence) {
         // Move out of offline group. Add to all groups.
         final ContactItem offlineItem = offlineGroup.getContactItemByJID(bareJID);
 
@@ -444,7 +444,7 @@ public class ContactList extends JPanel implements ActionListener,
 
             if (contactGroup != null) {
                 ContactItem changeContactItem;
-                if (contactGroup.getContactItemByJID(entry.getUser()) == null) {
+                if (contactGroup.getContactItemByJID(entry.getJid()) == null) {
                 	ContactItem offlineCurrentItem = contactGroup.getOfflineContactItemByJID(bareJID);
                 	//prevents from duplicating roster contacts when users going offline and online with Offline Group invisible
                 	contactGroup.removeContactItem(offlineCurrentItem);
@@ -453,7 +453,7 @@ public class ContactList extends JPanel implements ActionListener,
                     // dispatch thread
                     if (EventQueue.isDispatchThread()) {
 
-                        changeContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+                        changeContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
                         contactGroup.addContactItem(changeContactItem);
                         changeContactItem.setAvailable(true);
                         changeContactItem.setPresence(presence);                        
@@ -506,7 +506,7 @@ public class ContactList extends JPanel implements ActionListener,
         if (!isFiled) {
 
             
-            if (unfiledGroup.getContactItemByJID(entry.getUser()) == null) {
+            if (unfiledGroup.getContactItemByJID(entry.getJid()) == null) {
                 // If we are reconnecting we have to check if we are on the
                 // dispatch thread
                 if (EventQueue.isDispatchThread()) {
@@ -600,7 +600,7 @@ public class ContactList extends JPanel implements ActionListener,
 	                    contactGroup.setVisible(true);
 	                }
 	                else {
-	                    if (offlineGroup.getContactItemByJID(entry.getUser()) == null) {
+	                    if (offlineGroup.getContactItemByJID(entry.getJid()) == null) {
 	                        moveToOffline(contactItem);
 	                    }
 	                }
@@ -748,9 +748,9 @@ moveToOffline(moveToOfflineContactItem);
                         }
                         else {
                             ContactGroup contactGroup = getContactGroup(group.getName());
-                            ContactItem item = offlineGroup.getContactItemByJID(jid.toString());
+                            ContactItem item = offlineGroup.getContactItemByJID(jid.asBareJid());
                             if (item == null) {
-                                item = contactGroup.getContactItemByJID(jid.toString());
+                                item = contactGroup.getContactItemByJID(jid.asBareJid());
                             }
                             // Check to see if this entry is new to a pre-existing group.
                             if (item == null) {
@@ -804,7 +804,7 @@ moveToOffline(moveToOfflineContactItem);
                         }
 
                         for (ContactGroup group : new ArrayList<>( getContactGroups() )) {
-                            ContactItem itemFound = group.getContactItemByJID(jid.toString());
+                            ContactItem itemFound = group.getContactItemByJID(jid.asBareJid());
                             if (itemFound != null && !unfiled && group != getUnfiledGroup() && group != offlineGroup) {
                                 if (!userGroupSet.contains(group.getGroupName())) {
                                     if (group.getContactItems().isEmpty()) {
@@ -824,12 +824,12 @@ moveToOffline(moveToOfflineContactItem);
                     }
 
                     ContactGroup unfiledGrp = getUnfiledGroup();
-                    ContactItem unfiledItem = unfiledGrp.getContactItemByJID(jid.toString());
+                    ContactItem unfiledItem = unfiledGrp.getContactItemByJID(jid.asBareJid());
                     if (unfiledItem != null) {
 
                     }
                     else {
-                        ContactItem offlineItem = offlineGroup.getContactItemByJID(jid.toString());
+                        ContactItem offlineItem = offlineGroup.getContactItemByJID(jid.asBareJid());
                         if (offlineItem != null) {
                             if ((rosterEntry.getType() == RosterPacket.ItemType.none || rosterEntry.getType() == RosterPacket.ItemType.from)
                                 && rosterEntry.isSubscriptionPending()) {
@@ -850,15 +850,20 @@ moveToOffline(moveToOfflineContactItem);
 
     }
 
+    public ContactItem getContactItemByJID(CharSequence jid) {
+        BareJid bareJid = JidCreate.bareFrom(jid);
+        return getContactItemByJID(bareJid);
+    }
+
     /**
      * Retrieve the ContactItem by it's jid.
      *
      * @param jid the JID of the user.
      * @return the "first" contact item found.
      */
-    public ContactItem getContactItemByJID(String jid) {
+    public ContactItem getContactItemByJID(BareJid jid) {
         for (ContactGroup group : getContactGroups()) {
-            ContactItem item = group.getContactItemByJID(XmppStringUtils.parseBareJid(jid));
+            ContactItem item = group.getContactItemByJID(jid);
             if (item != null) {
                 return item;
             }
@@ -903,9 +908,9 @@ moveToOffline(moveToOfflineContactItem);
      * @param jid  the users jid.
      * @param icon the icon to use.
      */
-    public void setIconFor(String jid, Icon icon) {
+    public void setIconFor(Jid jid, Icon icon) {
         for (ContactGroup group : getContactGroups()) {
-            ContactItem item = group.getContactItemByJID(XmppStringUtils.parseBareJid(jid));
+            ContactItem item = group.getContactItemByJID(jid.asBareJid());
             if (item != null) {
                 item.setIcon(icon);
                 group.fireContactGroupUpdated();
@@ -918,9 +923,9 @@ moveToOffline(moveToOfflineContactItem);
      *
      * @param jid the users jid.
      */
-    public void useDefaults(String jid) {
+    public void useDefaults(Jid jid) {
         for (ContactGroup group : getContactGroups()) {
-            ContactItem item = group.getContactItemByJID(XmppStringUtils.parseBareJid(jid));
+            ContactItem item = group.getContactItemByJID(jid.asBareJid());
             if (item != null) {
                 item.updatePresenceIcon(item.getPresence());
                 group.fireContactGroupUpdated();
@@ -935,7 +940,7 @@ moveToOffline(moveToOfflineContactItem);
      * @param displayName the users nickname in the contact list.
      * @return the "first" contact item found.
      */
-    public ContactItem getContactItemByDisplayName(String displayName) {
+    public ContactItem getContactItemByDisplayName(CharSequence displayName) {
         for (ContactGroup contactGroup : getContactGroups()) {
             ContactItem item = contactGroup.getContactItemByDisplayName(displayName);
             if (item != null) {
@@ -1265,7 +1270,7 @@ moveToOffline(moveToOfflineContactItem);
                 {
                     entry.setName(newAlias);
 
-                    final String user = address.asBareJid().toString();
+                    final BareJid user = address.asBareJid();
                     for ( ContactGroup cg : groupList ) {
                         ContactItem ci = cg.getContactItemByJID(user);
                         if (ci != null) {
@@ -1301,7 +1306,7 @@ moveToOffline(moveToOfflineContactItem);
                         rosterGroup.removeEntry(rosterEntry);
                     }
                 }
-                contactGroup.removeContactItem(contactGroup.getContactItemByJID(item.getJID()));
+                contactGroup.removeContactItem(contactGroup.getContactItemByJID(item.getJid()));
                 checkGroup(contactGroup);
             }
             catch (Exception e) {
@@ -1323,7 +1328,7 @@ moveToOffline(moveToOfflineContactItem);
         }
     }
 
-    private void removeContactItem(String jid) {
+    private void removeContactItem(BareJid jid) {
         for (ContactGroup group : new ArrayList<>( getContactGroups() )) {
             ContactItem item = group.getContactItemByJID(jid);
             group.removeOfflineContactItem(jid);
@@ -1489,7 +1494,7 @@ moveToOffline(moveToOfflineContactItem);
      * @param component the owning component
      */
     public void showPopup(Component component, MouseEvent e, final ContactItem item) {
-        if (item.getJID() == null) {
+        if (item.getJid() == null) {
             return;
         }
 
@@ -1553,7 +1558,7 @@ moveToOffline(moveToOfflineContactItem);
         boolean isInSharedGroup = false;
         for (ContactGroup cGroup : new ArrayList<>( getContactGroups() )) {
             if (cGroup.isSharedGroup()) {
-                ContactItem it = cGroup.getContactItemByJID(item.getJID());
+                ContactItem it = cGroup.getContactItemByJID(item.getJid().asBareJid());
                 if (it != null) {
                     isInSharedGroup = true;
                 }
@@ -1573,7 +1578,7 @@ moveToOffline(moveToOfflineContactItem);
 
 			public void actionPerformed(ActionEvent e) {
                 VCardManager vcardSupport = SparkManager.getVCardManager();
-                String jid = item.getJID();
+                BareJid jid = item.getJid().asBareJid();
                 vcardSupport.viewProfile(jid, SparkManager.getWorkspace());
             }
         };
@@ -2083,7 +2088,7 @@ SwingUtilities.invokeLater( () -> loadContactList() );
         return gList;
     }
 
-    private void subscriptionRequest(final String jid) throws SmackException.NotConnectedException
+    private void subscriptionRequest(final BareJid jid) throws SmackException.NotConnectedException
     {
         final SubscriptionDialog subscriptionDialog = new SubscriptionDialog();
         subscriptionDialog.invoke(jid);

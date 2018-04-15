@@ -42,8 +42,11 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.privacy.PrivacyManager;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
 
@@ -93,7 +96,7 @@ public class ConferenceUtils {
      * @return the formatted date.
      * @throws Exception throws an exception if we are unable to retrieve the date.
      */
-    public static String getCreationDate(String roomJID) throws Exception {
+    public static String getCreationDate(EntityBareJid roomJID) throws Exception {
         ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(SparkManager.getConnection());
 
         final DateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss");
@@ -126,14 +129,14 @@ public class ConferenceUtils {
      * @param password the rooms password (if any).
      * @return the GroupChatRoom created.
      */
-    public static GroupChatRoom enterRoomOnSameThread(final String roomName, String roomJID, String password )
+    public static GroupChatRoom enterRoomOnSameThread(final String roomName, EntityBareJid roomJID, String password )
     {
         final JoinRoomSwingWorker worker = new JoinRoomSwingWorker( roomJID, password, roomName );
         worker.start();
         return (GroupChatRoom) worker.get(); // blocks until completed.
     }
 
-    public static GroupChatRoom enterRoom(final MultiUserChat groupChat, String tabTitle, final String nickname, final String password)
+    public static GroupChatRoom enterRoom(final MultiUserChat groupChat, String tabTitle, final Resourcepart nickname, final String password)
     {
         final JoinRoomSwingWorker worker = new JoinRoomSwingWorker( groupChat.getRoom(), nickname, password, tabTitle );
         worker.start();
@@ -185,7 +188,7 @@ public class ConferenceUtils {
      * @param password  the password to join the room with.
      * @return a List of errors, if any.
      */
-    public static List<String> joinRoom(MultiUserChat groupChat, String nickname, String password) {
+    public static List<String> joinRoom(MultiUserChat groupChat, Resourcepart nickname, String password) {
         final List<String> errors = new ArrayList<>();
         if ( !groupChat.isJoined() )
         {
@@ -201,7 +204,7 @@ public class ConferenceUtils {
                 }
                 changePresenceToAvailableIfInvisible();
             }
-            catch ( XMPPException | SmackException ex )
+            catch ( XMPPException | SmackException | InterruptedException ex )
             {
                 XMPPError error = null;
                 if ( ex instanceof XMPPException.XMPPErrorException )
@@ -224,7 +227,7 @@ public class ConferenceUtils {
      * @param jids a collection of the users to invite.
      */
     public static void inviteUsersToRoom(MultiUserChat chat, Collection<String> jids, boolean randomName ) {
-        inviteUsersToRoom( XmppStringUtils.parseDomain( chat.getRoom() ), chat.getRoom(), jids, randomName );
+        inviteUsersToRoom(chat.getRoom().asDomainBareJid(), chat.getRoom(), jids, randomName );
     }
 
     /**
@@ -234,7 +237,7 @@ public class ConferenceUtils {
      * @param roomName    the name of the room.
      * @param jids        a collection of the users to invite.
      */
-    public static void inviteUsersToRoom(String serviceName, String roomName, Collection<String> jids, boolean randomName) {
+    public static void inviteUsersToRoom(DomainBareJid serviceName, EntityBareJid roomName, Collection<Jid> jids, boolean randomName) {
         final LocalPreferences pref = SettingsManager.getLocalPreferences();
         boolean useTextField = pref.isUseAdHocRoom();
         Collection<BookmarkedConference> rooms = null;
@@ -247,10 +250,10 @@ public class ConferenceUtils {
             useTextField = !randomName || (rooms == null || rooms.size() == 0);
         }
         InvitationDialog inviteDialog = new InvitationDialog(useTextField);
-        inviteDialog.inviteUsersToRoom(serviceName, rooms, roomName, jids);
+        inviteDialog.inviteUsersToRoom(serviceName.toString(), rooms, roomName.toString(), jids);
     }
 
-    public static Collection<BookmarkedConference> retrieveBookmarkedConferences() throws XMPPException, SmackException
+    public static Collection<BookmarkedConference> retrieveBookmarkedConferences() throws XMPPException, SmackException, InterruptedException
     {
         BookmarkManager manager = BookmarkManager.getBookmarkManager(SparkManager.getConnection());
         return manager.getBookmarkedConferences();
@@ -262,7 +265,7 @@ public class ConferenceUtils {
      * @param roomJID the JID of the room.
      * @return true if the room requires a password.
      */
-    public static boolean isPasswordRequired(String roomJID) {
+    public static boolean isPasswordRequired(EntityBareJid roomJID) {
         // Check to see if the room is password protected
     	ServiceDiscoveryManager discover = ServiceDiscoveryManager.getInstanceFor(SparkManager.getConnection());
 
@@ -270,7 +273,7 @@ public class ConferenceUtils {
             DiscoverInfo info = discover.discoverInfo(roomJID);
             return info.containsFeature("muc_passwordprotected");
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);
         }
         return false;
@@ -295,7 +298,7 @@ public class ConferenceUtils {
         final GroupChatRoom room = UIComponentRegistry.createGroupChatRoom(multiUserChat);
         try {
             // Attempt to create room.
-            multiUserChat.create(pref.getNickname());
+            multiUserChat.create(pref.getNicknameAsResourcepart());
         }
         catch (XMPPException | SmackException e) {
             throw new SmackException(e);
