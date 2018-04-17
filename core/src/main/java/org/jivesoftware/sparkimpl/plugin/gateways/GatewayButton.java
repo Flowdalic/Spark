@@ -86,7 +86,7 @@ public class GatewayButton extends JPanel implements GatewayItem {
                     {
                         SparkManager.getConnection().sendStanza(presence);
                     }
-                    catch ( SmackException.NotConnectedException e )
+                    catch ( SmackException.NotConnectedException | InterruptedException e )
                     {
                         Log.error( "Unable to register.", e );
                     }
@@ -115,7 +115,7 @@ public class GatewayButton extends JPanel implements GatewayItem {
             {
                 SparkManager.getConnection().sendStanza(offlinePresence);
             }
-            catch ( SmackException.NotConnectedException e )
+            catch ( SmackException.NotConnectedException | InterruptedException e )
             {
                 Log.warning( "Unable to send sign-off.", e );
             }
@@ -130,7 +130,7 @@ public class GatewayButton extends JPanel implements GatewayItem {
             {
                 SparkManager.getConnection().sendStanza(onlinePresence);
             }
-            catch ( SmackException.NotConnectedException e )
+            catch ( SmackException.NotConnectedException | InterruptedException e )
             {
                 Log.error( "Unable sign-in.", e );
             }
@@ -158,7 +158,7 @@ public class GatewayButton extends JPanel implements GatewayItem {
                 try {
                     TransportUtils.unregister(SparkManager.getConnection(), transport.getServiceName());
                 }
-                catch (SmackException e1) {
+                catch (SmackException | InterruptedException e1) {
                     Log.error(e1);
                 }
             }

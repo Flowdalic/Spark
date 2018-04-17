@@ -158,7 +158,7 @@ public class SubscriptionDialog {
         }
     }
 
-    public void invoke(final BareJid jid) throws SmackException.NotConnectedException
+    public void invoke(final BareJid jid) throws SmackException.NotConnectedException, InterruptedException
     {
         this.jid = jid;
 
@@ -175,7 +175,7 @@ public class SubscriptionDialog {
         }
 
         String message = Res.getString("message.approve.subscription", jid.asUnescapedString());
-        Transport transport = TransportUtils.getTransport( jid.getDomain().toString() );
+        Transport transport = TransportUtils.getTransport( jid.asDomainBareJid() );
         Icon icon = null;
         if (transport != null) {
             icon = transport.getIcon();
@@ -188,7 +188,7 @@ public class SubscriptionDialog {
         
         UserManager userManager = SparkManager.getUserManager();
         
-        String username = userManager.getNickname(userManager.getFullJID(jid));
+        String username = userManager.getNickname(jid);
         username = username == null ? XmppStringUtils.parseLocalpart(jid.asUnescapedString()) : username;
         usernameLabelValue.setText(jid.asUnescapedString());
         nicknameField.setText(username);
@@ -201,7 +201,7 @@ public class SubscriptionDialog {
                 {
                     SparkManager.getConnection().sendStanza(response);
                 }
-                catch ( SmackException.NotConnectedException e1 )
+                catch ( SmackException.NotConnectedException | InterruptedException e1 )
                 {
                     Log.warning( "Unable to send stanza accepting subscription from " + jid, e1 );
                 }
@@ -217,7 +217,7 @@ public class SubscriptionDialog {
                 {
                     SparkManager.getConnection().sendStanza(response);
                 }
-                catch ( SmackException.NotConnectedException e1 )
+                catch ( SmackException.NotConnectedException | InterruptedException e1 )
                 {
                     Log.warning( "Unable to send stanza accepting subscription from " + jid, e1 );
                 }

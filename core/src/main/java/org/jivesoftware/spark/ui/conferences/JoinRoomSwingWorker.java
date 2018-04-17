@@ -107,7 +107,7 @@ public class JoinRoomSwingWorker extends SwingWorker
             // Use the default nickname, if none has been provided.
             if ( nickname == null )
             {
-                nickname = SettingsManager.getRelodLocalPreferences().getNicknameAsResourcepart();
+                nickname = SettingsManager.getRelodLocalPreferences().getNickname();
             }
 
             // Join the MUC server-sided, if we're not already in.

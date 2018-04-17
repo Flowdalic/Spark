@@ -103,6 +103,11 @@ public class RawPacketSender implements ActionListener {
 		public String toXML() {
 		    return _inputarea.getText();
 		}
+
+        @Override
+        public String toString() {
+            return null;
+        }
 	    };
 
 	    try {

@@ -68,6 +68,8 @@ import org.jivesoftware.sparkimpl.plugin.gateways.GatewayPlugin;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
 import org.jivesoftware.sparkimpl.plugin.transcripts.ChatTranscriptPlugin;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.util.XmppStringUtils;
 
 /**
@@ -352,12 +354,12 @@ public class Workspace extends JPanel implements StanzaListener {
             }
 
             // Create new chat room for Agent Invite.
-            final String from = stanza.getFrom().toString();
+            final Jid from = stanza.getFrom();
             final String host = SparkManager.getSessionManager().getServerAddress();
 
             // Don't allow workgroup notifications to come through here.
-            final String bareJID = XmppStringUtils.parseBareJid(from);
-            if (host.equalsIgnoreCase(from) || from == null) {
+            final BareJid bareJID = from.asBareJid();
+            if (host.equalsIgnoreCase(from.toString()) || from == null) {
                 return;
             }
 
@@ -389,11 +391,11 @@ public class Workspace extends JPanel implements StanzaListener {
             return;
         }
 
-        String bareJID = message.getFrom().asBareJid().toString();
+        BareJid bareJID = message.getFrom().asBareJid();
         ContactItem contact = contactList.getContactItemByJID(bareJID);
-        String nickname = XmppStringUtils.parseLocalpart(bareJID);
+        Localpart nickname = bareJID.getLocalpartOrNull();
         if (contact != null) {
-            nickname = contact.getDisplayName();
+            nickname = Localpart.fromOrThrowUnchecked(contact.getDisplayName());
         }
 
         // Create the room if it does not exist.
@@ -420,7 +422,11 @@ public class Workspace extends JPanel implements StanzaListener {
      */
     private void createOneToOneRoom(BareJid bareJID, Message message) {
         ContactItem contact = contactList.getContactItemByJID(bareJID);
-        String nickname = XmppStringUtils.parseLocalpart(bareJID);
+        Localpart localpart = bareJID.getLocalpartOrNull();
+        String nickname = null;
+        if (localpart != null) {
+            nickname = localpart.toString();
+        }
         if (contact != null) {
             nickname = contact.getDisplayName();
         }

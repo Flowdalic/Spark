@@ -523,7 +523,7 @@ public class SysTrayPlugin implements Plugin, NativeHandler, ChatManagerListener
 	}
 
 	@Override
-	public void stateChanged(Chat chat, ChatState state) {
+	public void stateChanged(Chat chat, ChatState state, Message message) {
 		presence = Workspace.getInstance().getStatusBar().getPresence();
 		if (ChatState.composing.equals(state)) {
 			changeSysTrayIcon();

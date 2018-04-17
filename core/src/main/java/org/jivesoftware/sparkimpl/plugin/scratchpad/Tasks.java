@@ -187,7 +187,7 @@ public class Tasks implements PrivateData {
         try {
             manager.setPrivateData(tasks);
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);
         }
     }
@@ -203,7 +203,7 @@ public class Tasks implements PrivateData {
         try {
             tasks = (Tasks)manager.getPrivateData("scratchpad", "scratchpad:tasks");
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);
         }
 

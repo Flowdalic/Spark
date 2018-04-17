@@ -45,7 +45,7 @@ public class SoundPlugin implements Plugin, MessageListener, ChatRoomListener {
             if (!presence.isAvailable()) {
                 SoundPreferences preferences = soundPreference.getPreferences();
                 if (preferences != null && preferences.isPlayOfflineSound()) {
-                    if (!PresenceManager.isOnline(presence.getFrom())) {
+                    if (!PresenceManager.isOnline(presence.getFrom().asBareJid())) {
                         String offline = preferences.getOfflineSound();
                         File offlineFile = new File(offline);
                         SparkManager.getSoundManager().playClip(offlineFile);

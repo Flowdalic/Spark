@@ -407,7 +407,7 @@ public class TranscriptWindow extends ChatArea implements ContextMenuListener
                     }
                     if ( from == null )
                     {
-                        from = pref.getNickname();
+                        from = pref.getNickname().toString();
                     }
 
                     if ( Message.Type.groupchat == message.getType() )

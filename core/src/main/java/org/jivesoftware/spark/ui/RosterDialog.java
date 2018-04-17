@@ -76,6 +76,7 @@ import org.jivesoftware.sparkimpl.plugin.gateways.transports.Transport;
 import org.jivesoftware.sparkimpl.plugin.gateways.transports.TransportUtils;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
@@ -97,7 +98,7 @@ public class RosterDialog implements ActionListener {
     private ContactList contactList;
     private JCheckBox publicBox;
     private JButton _searchForName ;
-    private Collection<String> _usersearchservice;
+    private Collection<DomainBareJid> _usersearchservice;
 
     /**
      * Create a new instance of RosterDialog.
@@ -105,7 +106,7 @@ public class RosterDialog implements ActionListener {
     public RosterDialog() {
         contactList = SparkManager.getWorkspace().getContactList();
         
-        _usersearchservice = SearchManager.getInstance().getSearchServicesAsString();
+        _usersearchservice = SearchManager.getInstance().getSearchServicesAsJid();
 
         panel = new JPanel();
         JLabel contactIDLabel = new JLabel();
@@ -131,7 +132,7 @@ public class RosterDialog implements ActionListener {
 	    public void mouseClicked(MouseEvent e) {
 		try {
 		    searchForContact(jidField.getText(), e);
-		} catch (XMPPException | SmackException e1) {
+		} catch (XMPPException | SmackException | InterruptedException e1) {
 		    Log.error("search contact", e1);
 		}
 	    }
@@ -232,7 +233,8 @@ public class RosterDialog implements ActionListener {
 
                     if ( !fullJID.isEmpty() && !fullJID.startsWith( "@" ))
                     {
-                        vcardNickname = SparkManager.getUserManager().getNickname( fullJID );
+                        BareJid bareJid = JidCreate.bareFromOrThrowUnchecked(fullJID);
+                        vcardNickname = SparkManager.getUserManager().getNickname( bareJid );
                     }
                 }
 
@@ -398,7 +400,7 @@ public class RosterDialog implements ActionListener {
             try {
                 jid = Gateway.getJID(transport.getServiceName(), jid);
             }
-            catch (SmackException e) {
+            catch (SmackException | InterruptedException e) {
                 Log.error(e);
             }
 
@@ -450,9 +452,10 @@ public class RosterDialog implements ActionListener {
      * @param event
      *            , the MouseEvent which triggered it
      * @throws XMPPException
+     * @throws InterruptedException 
      */
     public void searchForContact(String byname, MouseEvent event)
-            throws XMPPException, SmackException.NotConnectedException, SmackException.NoResponseException
+            throws XMPPException, SmackException.NotConnectedException, SmackException.NoResponseException, InterruptedException
     {
 
     	UIManager.put("OptionPane.okButtonText", Res.getString("ok"));
@@ -476,7 +479,7 @@ public class RosterDialog implements ActionListener {
 	    header.setForeground(Color.red);
 	    popup.add(header);
 
-	    for (String search : _usersearchservice) {
+	    for (DomainBareJid search : _usersearchservice) {
 
 		ReportedData data;
 		UserSearchManager usersearchManager = new UserSearchManager(

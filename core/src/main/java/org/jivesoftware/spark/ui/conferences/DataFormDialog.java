@@ -78,7 +78,9 @@ public class DataFormDialog extends JPanel {
         try {
             form = chat.getConfigurationForm();
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
+            // TODO: Just logging the exception wont do it and actually just cause an NPE below, we need to handle it
+            // better.
             Log.error(e);
         }
 
@@ -252,7 +254,7 @@ public class DataFormDialog extends JPanel {
                 BookmarkManager.getBookmarkManager(SparkManager.getConnection()).removeBookmarkedConference(info.getRoom());
             }
         }
-        catch (XMPPException | SmackException e) {
+        catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);
             MessageDialog.showErrorDialog( Res.getString( "group.send_config.error" ), e);
         }

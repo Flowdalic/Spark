@@ -40,6 +40,7 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.parts.Resourcepart;
 
 import javax.swing.*;
@@ -429,12 +430,12 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
         if ( SparkManager.getChatManager().getChatContainer().getActiveChatRoom() instanceof GroupChatRoom )
         {
             final GroupChatRoom activeChatRoom = (GroupChatRoom) SparkManager.getChatManager().getChatContainer().getActiveChatRoom();
-            for ( String participant : activeChatRoom.getParticipants() )
+            for ( EntityFullJid participant : activeChatRoom.getParticipants() )
             {
-                final String nickname = participant.substring( participant.lastIndexOf( "/" ) + 1 );
-                if ( nickname.toLowerCase().startsWith( needle.toLowerCase() ) )
+                final Resourcepart nickname = participant.getResourcepart();
+                if ( nickname.toString().toLowerCase().startsWith( needle.toLowerCase() ) )
                 {
-                    matches.add( nickname );
+                    matches.add( nickname.toString() );
                 }
             }
         }
@@ -530,7 +531,7 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
      */
     public Resourcepart getNickname() {
         LocalPreferences pref = SettingsManager.getLocalPreferences();
-        return pref.getNicknameAsResourcepart();
+        return pref.getNickname();
     }
 
 
@@ -904,7 +905,9 @@ public abstract class ChatRoom extends BackgroundPanel implements ActionListener
      * @deprecated use {@link #getRoomJid()} instead.
      */
     @Deprecated
-    public abstract EntityBareJid getRoomname();
+    public EntityBareJid getRoomname() {
+        return getRoomJid();
+    }
 
     /**
      * Get the XMPP address of this room.

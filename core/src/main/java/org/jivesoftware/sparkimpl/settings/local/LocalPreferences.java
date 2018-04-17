@@ -33,6 +33,8 @@ import javax.swing.UIManager;
 
 import org.jivesoftware.spark.util.Encryptor;
 import org.jivesoftware.spark.util.log.Log;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 
@@ -729,25 +731,14 @@ public class LocalPreferences {
 				"15"));
 	}
 
-	// TODO: nickname should be of type Resourcepart.
-	public void setNickname(String nickname) {
-		props.setProperty("nickname", nickname);
+	public void setNickname(Resourcepart nickname) {
+		props.setProperty("nickname", nickname.toString());
 	}
 
-	// TODO: Return type should be Resourcepart.
-	public String getNickname() {
-		return props.getProperty("nickname", SparkManager.getUserManager()
+	public Resourcepart getNickname() {
+		String nicknameString = props.getProperty("nickname", SparkManager.getUserManager()
 				.getNickname());
-	}
-
-	public Resourcepart getNicknameAsResourcepart() {
-		String nicknameString = getNickname();
-		Resourcepart nickname;
-		try {
-			nickname = Resourcepart.from(nicknameString);
-		} catch (XmppStringprepException e) {
-			throw new IllegalStateException(e);
-		}
+		Resourcepart nickname = Resourcepart.fromOrThrowUnchecked(nicknameString);
 		return nickname;
 	}
 
@@ -1284,12 +1275,16 @@ public class LocalPreferences {
 
     }
 
-    public String getDefaultBookmarkedConf() {
-        return props.getProperty("defaultBookmarkedConf");
+    public EntityBareJid getDefaultBookmarkedConf() {
+        String jidString = props.getProperty("defaultBookmarkedConf");
+        if (jidString == null) {
+            return null;
+        }
+        return JidCreate.entityBareFromOrThrowUnchecked(jidString);
     }
 
-    public void setDefaultBookmarkedConf(String bookmarkedConferenceJid) {
-        setString("defaultBookmarkedConf",bookmarkedConferenceJid);
+    public void setDefaultBookmarkedConf(EntityBareJid bookmarkedConferenceJid) {
+        setString("defaultBookmarkedConf",bookmarkedConferenceJid.toString());
     }
 
     /**

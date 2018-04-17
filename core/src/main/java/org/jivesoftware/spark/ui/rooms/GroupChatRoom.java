@@ -71,8 +71,8 @@ public class GroupChatRoom extends ChatRoom
     private final LocalPreferences pref = SettingsManager.getLocalPreferences();
     private final MultiUserChat chat;
     private final SubjectPanel subjectPanel;
-    private final List<String> currentUserList = new ArrayList<>();
-    private final List<String> blockedUsers = new ArrayList<>();
+    private final List<EntityFullJid> currentUserList = new ArrayList<>();
+    private final List<EntityFullJid> blockedUsers = new ArrayList<>();
     private final GroupChatParticipantList roomInfo;
     private final RolloverButton settings;
     private Icon tabIcon = SparkRes.getImageIcon( SparkRes.CONFERENCE_IMAGE_16x16 );
@@ -155,7 +155,7 @@ public class GroupChatRoom extends ChatRoom
                             Form form = chat.getConfigurationForm().createAnswerForm();
                             new DataFormDialog( chatFrame, chat, form );
                         }
-                        catch ( XMPPException | SmackException e )
+                        catch ( XMPPException | SmackException | InterruptedException e )
                         {
                             Log.error( "Error configuring room.", e );
                         }
@@ -185,7 +185,7 @@ public class GroupChatRoom extends ChatRoom
                             {
                                 chat.changeSubject( newSubject );
                             }
-                            catch ( XMPPException | SmackException e )
+                            catch ( XMPPException | SmackException | InterruptedException e )
                             {
                                 Log.error( e );
                             }
@@ -226,7 +226,7 @@ public class GroupChatRoom extends ChatRoom
                                 chat.destroy( reason, null );
                                 getChatRoom().leaveChatRoom();
                             }
-                            catch ( XMPPException | SmackException e1 )
+                            catch ( XMPPException | SmackException | InterruptedException e1 )
                             {
                                 Log.warning( "Unable to destroy room", e1 );
                             }
@@ -305,7 +305,7 @@ public class GroupChatRoom extends ChatRoom
                     {
                         chat.changeSubject( newSubject );
                     }
-                    catch ( XMPPException | SmackException xmpee )
+                    catch ( XMPPException | SmackException | InterruptedException xmpee )
                     {
                         getTranscriptWindow().insertNotificationMessage( xmpee.getMessage(), ChatManager.ERROR_COLOR );
                         scrollToBottom();
@@ -359,7 +359,7 @@ public class GroupChatRoom extends ChatRoom
      * @param body     Body of message to scan for reasons to highlight.
      * @return Color of message background.
      */
-    private Color getMessageBackground( String nickname, String body )
+    private Color getMessageBackground( Resourcepart nickname, String body )
     {
         final Resourcepart myNickName = chat.getNickname();
         final String myUserName = SparkManager.getSessionManager().getUsername();
@@ -367,7 +367,7 @@ public class GroupChatRoom extends ChatRoom
         final Pattern nicknameMatch = Pattern.compile( myNickName.toString(), Pattern.CASE_INSENSITIVE );
 
         // Should we even highlight this packet?
-        if ( pref.isMucHighNameEnabled() && myNickName.toString().equalsIgnoreCase( nickname ) )
+        if ( pref.isMucHighNameEnabled() && myNickName.equals( nickname ) )
         {
             return new Color( 244, 248, 255 );
         }
@@ -433,6 +433,12 @@ public class GroupChatRoom extends ChatRoom
         return chat.getRoom();
     }
 
+    @Override
+    public EntityBareJid getRoomJid()
+    {
+        return chat.getRoom();
+    }
+ 
     /**
      * Retrieve the nickname of the user in this groupchat.
      *
@@ -662,7 +668,7 @@ public class GroupChatRoom extends ChatRoom
                 if ( message.getBody() != null )
                 {
                     // Create new room
-                    ChatRoom chatRoom = new ChatRoomImpl( message.getFrom().toString(), userNickname.toString(), roomTitle );
+                    ChatRoom chatRoom = new ChatRoomImpl( message.getFrom().asEntityBareJidOrThrow(), userNickname, roomTitle );
                     SparkManager.getChatManager().getChatContainer().addChatRoom( chatRoom );
 
                     SparkManager.getChatManager().getChatContainer().activateChatRoom( chatRoom );
@@ -708,8 +714,8 @@ public class GroupChatRoom extends ChatRoom
             return;
         }
 
-        final String from = presence.getFrom();
-        final String nickname = XmppStringUtils.parseResource( from );
+        final EntityFullJid from = presence.getFrom().asEntityFullJidOrThrow();
+        final Resourcepart nickname = from.getResourcepart();
 
         final MUCUser mucUser = stanza.getExtension( "x", "http://jabber.org/protocol/muc#user" );
         final Set<MUCUser.Status> status = new HashSet<>();
@@ -964,7 +970,7 @@ public class GroupChatRoom extends ChatRoom
      *
      * @return the user format (e.g. darkcave@macbeth.shakespeare.lit/thirdwitch) of each user in the room.
      */
-    public Collection<String> getParticipants()
+    public Collection<EntityFullJid> getParticipants()
     {
         return currentUserList;
     }
@@ -1010,7 +1016,7 @@ public class GroupChatRoom extends ChatRoom
      *
      * @param usersJID the room jid of the user (ex.spark@conference.jivesoftware.com/Dan)
      */
-    public void addBlockedUser( String usersJID )
+    public void addBlockedUser( EntityFullJid usersJID )
     {
         blockedUsers.add( usersJID );
     }
@@ -1020,7 +1026,7 @@ public class GroupChatRoom extends ChatRoom
      *
      * @param usersJID the jid of the user (ex. spark@conference.jivesoftware.com/Dan)
      */
-    public void removeBlockedUser( String usersJID )
+    public void removeBlockedUser( EntityFullJid usersJID )
     {
         blockedUsers.remove( usersJID );
     }
@@ -1043,7 +1049,7 @@ public class GroupChatRoom extends ChatRoom
      * @param jid     the jid of the user to invite.
      * @param message the message to send with the invitation.
      */
-    public void inviteUser( String jid, String message )
+    public void inviteUser( EntityBareJid jid, String message )
     {
         message = message != null && !message.isEmpty() ? message : Res.getString( "message.please.join.in.conference" );
 
@@ -1052,7 +1058,7 @@ public class GroupChatRoom extends ChatRoom
             getMultiUserChat().invite( jid, message );
             roomInfo.addInvitee( jid, message );
         }
-        catch ( SmackException.NotConnectedException e )
+        catch ( SmackException.NotConnectedException | InterruptedException e )
         {
             Log.warning( "Unable to invite " + jid + " to room " + roomInfo.getName(), e );
         }
@@ -1114,7 +1120,7 @@ public class GroupChatRoom extends ChatRoom
     @Override
     public void reconnectionSuccessful()
     {
-        final String roomJID = chat.getRoom();
+        final EntityBareJid roomJID = chat.getRoom();
         final String roomName = tabTitle;
         isActive = false;
         EventQueue.invokeLater( () -> {

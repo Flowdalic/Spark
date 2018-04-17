@@ -182,7 +182,7 @@ public class ContactListAssistantPlugin implements Plugin {
 	private boolean isContactItemInGroup(Collection<ContactItem> contactItems, ContactGroup group) {
 		boolean contactInGroup = false;
 		for (ContactItem ci : contactItems) {
-			if (group.getContactItemByJID(ci.getJID(), true) != null) {
+			if (group.getContactItemByJID(ci.getJid(), true) != null) {
 				contactInGroup = true;
 				break;
 			}
@@ -266,11 +266,11 @@ public class ContactListAssistantPlugin implements Plugin {
         boolean groupHadAvailableContacts = false;
         
         // Do not copy/move a contact item only if it is not already in the Group.
-        if (contactGroup.getContactItemByJID(item.getJID(), true) != null) {
+        if (contactGroup.getContactItemByJID(item.getJid().asBareJid(), true) != null) {
             return;
         }
 
-        if (!PresenceManager.isOnline(item.getJID())) {
+        if (!PresenceManager.isOnline(item.getJid().asBareJid())) {
             contactGroup.addOfflineContactItem(item.getAlias(), item.getNickname(), item.getJID(), null);
         }
         else {

@@ -42,6 +42,7 @@ import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.util.XmppStringUtils;
 
@@ -67,7 +68,7 @@ public class ChatContainer extends SparkTabbedPane implements MessageListener, C
      */
     private final List<ChatRoomListener> chatRoomListeners = new ArrayList<>();
     private final List<ChatRoom> chatRoomList = new ArrayList<>();
-    private final Map<String, StanzaListener> presenceMap = new HashMap<>();
+    private final Map<EntityBareJid, StanzaListener> presenceMap = new HashMap<>();
     private static final String WELCOME_TITLE = SparkRes.getString(SparkRes.WELCOME);
     private ChatFrame chatFrame;
     private final TimerTask focusTask;
@@ -263,17 +264,17 @@ public class ChatContainer extends SparkTabbedPane implements MessageListener, C
         SparkManager.getConnection().addAsyncStanzaListener(myListener, presenceFilter);
 
         // Add to PresenceMap
-        presenceMap.put(room.getRoomname(), myListener);
+        presenceMap.put(room.getRoomJid(), myListener);
 
         String tooltip;
         if (room instanceof ChatRoomImpl) {
-            tooltip = ((ChatRoomImpl)room).getParticipantJID();
+            tooltip = ((ChatRoomImpl)room).getParticipantJID().toString();
             String nickname = SparkManager.getUserManager().getUserNicknameFromJID(((ChatRoomImpl)room).getParticipantJID());
 
             tooltip = "<html><body><b>Contact:&nbsp;</b>" + nickname + "<br><b>JID:&nbsp;</b>" + tooltip;
         }
         else {
-            tooltip = room.getRoomname();
+            tooltip = room.getRoomJid().toString();
         }
 
         // Create ChatRoom UI and dock
@@ -576,8 +577,19 @@ public class ChatContainer extends SparkTabbedPane implements MessageListener, C
      * @return the ChatRoom
      * @throws ChatRoomNotFoundException if the room was not found.
      */
-    // TODO: roomName should be of type EntityBareJid.
     public ChatRoom getChatRoom(CharSequence roomName) throws ChatRoomNotFoundException {
+        EntityBareJid roomAddress = JidCreate.entityBareFromOrThrowUnchecked(roomName);
+        return getChatRoom(roomAddress);
+    }
+
+    /**
+     * Returns a ChatRoom by name.
+     *
+     * @param roomAddress the name of the ChatRoom.
+     * @return the ChatRoom
+     * @throws ChatRoomNotFoundException if the room was not found.
+     */
+    public ChatRoom getChatRoom(EntityBareJid roomAddress) throws ChatRoomNotFoundException {
         for (int i = 0; i < getTabCount(); i++) {
             ChatRoom room = null;
             try {
@@ -587,11 +599,11 @@ public class ChatContainer extends SparkTabbedPane implements MessageListener, C
                 // Ignore
             }
 
-            if (room != null && room.getRoomname().equalsIgnoreCase(roomName.toString()) && room.isActive()) {
+            if (room != null && room.getRoomJid().equals(roomAddress) && room.isActive()) {
                 return room;
             }
         }
-        throw new ChatRoomNotFoundException(roomName + " not found.");
+        throw new ChatRoomNotFoundException(roomAddress + " not found.");
     }
 
     /**
@@ -1133,10 +1145,10 @@ public class ChatContainer extends SparkTabbedPane implements MessageListener, C
             }
             if ( localPref.isMucHighToastEnabled()) {
                 // allowed to check for new messages containing name
-                String myNickName = chatRoom.getNickname();
+                Resourcepart myNickName = chatRoom.getNickname();
                 String myUserName = SparkManager.getSessionManager().getUsername();
                 Pattern usernameMatch = Pattern.compile(myUserName, Pattern.CASE_INSENSITIVE);
-                Pattern nicknameMatch = Pattern.compile(myNickName, Pattern.CASE_INSENSITIVE);
+                Pattern nicknameMatch = Pattern.compile(myNickName.toString(), Pattern.CASE_INSENSITIVE);
                 
                 if (usernameMatch.matcher(lastChatMessage.getBody()).find() || nicknameMatch.matcher(lastChatMessage.getBody()).find()) {
                     // match, send new message

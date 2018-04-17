@@ -53,6 +53,7 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.layout.LayoutSettingsManager;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.impl.JidCreate;
 import org.jivesoftware.resource.Default;
 
 /**
@@ -276,7 +277,8 @@ public class VCardEditor {
 		
 		if (Res.getString("refresh").equals(value)) {
                     VCardManager manager = SparkManager.getVCardManager();
-                    VCard card = manager.reloadVCard(vCard.getJabberId());
+                    BareJid bareJid = JidCreate.bareFromOrThrowUnchecked(vCard.getJabberId());
+                    VCard card = manager.reloadVCard(bareJid);
                     fillUI(card);
                 }
 		
@@ -303,7 +305,7 @@ public class VCardEditor {
      *            the parent component, used for location handling.
      */
     public void displayProfile(final BareJid jid, VCard vcard, JComponent parent) {
-	VCardViewer viewer = new VCardViewer(jid.toString());
+	VCardViewer viewer = new VCardViewer(jid);
 
 	final JFrame dlg = new JFrame(Res.getString("title.view.profile.for",
 		jid));

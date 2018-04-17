@@ -120,7 +120,7 @@ public class GatewayTabItem extends CollapsiblePane implements GatewayItem {
             {
                 SparkManager.getConnection().sendStanza(presence);
             }
-            catch ( SmackException.NotConnectedException e )
+            catch ( SmackException.NotConnectedException | InterruptedException e )
             {
                 Log.error( "Unable to send presence.", e );
             }
@@ -146,7 +146,7 @@ public class GatewayTabItem extends CollapsiblePane implements GatewayItem {
             _statusIcon.setIcon(SparkRes
                     .getImageIcon(SparkRes.YELLOW_BALL));
         }
-        catch ( SmackException.NotConnectedException e1 )
+        catch ( SmackException.NotConnectedException | InterruptedException e1 )
         {
             Log.error( "Unable to send presence.", e1 );
         }
@@ -161,7 +161,7 @@ public class GatewayTabItem extends CollapsiblePane implements GatewayItem {
             _statusIcon.setIcon(SparkRes
                     .getImageIcon(SparkRes.YELLOW_BALL));
         }
-        catch ( SmackException.NotConnectedException e1 )
+        catch ( SmackException.NotConnectedException | InterruptedException e1 )
         {
             Log.error( "Unable to send presence.", e1 );
         }
@@ -209,7 +209,7 @@ public class GatewayTabItem extends CollapsiblePane implements GatewayItem {
                 SparkManager.getConnection(),
                 _transport.getServiceName());
             setNotRegistered();
-        } catch (SmackException e1) {
+        } catch (SmackException | InterruptedException e1) {
             Log.error(e1);
         }
         }

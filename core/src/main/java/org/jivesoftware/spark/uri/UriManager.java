@@ -73,7 +73,7 @@ public class UriManager {
 	String query = uri.getQuery();
 	int bodyIndex = query.indexOf("body=");
 
-	String jid = retrieveJID(uri);
+	Jid jid = retrieveJID(uri);
 	String body = null;
 
 	// Find body
@@ -84,13 +84,13 @@ public class UriManager {
 	body = org.jivesoftware.spark.util.StringUtils.unescapeFromXML(body);
 
 	UserManager userManager = SparkManager.getUserManager();
-	String nickname = userManager.getUserNicknameFromJID(jid);
+	String nickname = userManager.getUserNicknameFromJID(jid.asBareJid());
 	if (nickname == null) {
-	    nickname = jid;
+	    nickname = jid.toString();
 	}
 
 	ChatManager chatManager = SparkManager.getChatManager();
-	ChatRoom chatRoom = chatManager.createChatRoom(jid, nickname, nickname);
+	ChatRoom chatRoom = chatManager.createChatRoom(jid.asBareJid(), nickname, nickname);
 	if (body != null) {
 	    Message message = new Message();
 	    message.setBody(body);
@@ -109,8 +109,8 @@ public class UriManager {
      *             thrown if the conference cannot be joined.
      */
     public void handleConference(URI uri) throws Exception {
-	String jid = retrieveJID(uri);
-	ConferenceUtils.joinConferenceOnSeperateThread(jid, jid, null);
+	Jid jid = retrieveJID(uri);
+	ConferenceUtils.joinConferenceOnSeperateThread(jid, jid.asEntityBareJidOrThrow(), null);
     }
 
     /**
@@ -123,7 +123,7 @@ public class UriManager {
     public void handleSubscribe(URI uri) throws Exception {
 	// xmpp:romeo@montague.net?subscribe
 	// Send contact add request
-	String jid = retrieveJID(uri);
+	Jid jid = retrieveJID(uri);
 
 	Presence response = new Presence(Presence.Type.subscribe);
 	response.setTo(jid);
@@ -245,7 +245,7 @@ public class UriManager {
      *            the URI
      * @return romeo@montague.net
      */
-    public String retrieveJID(URI uri) {
+    public Jid retrieveJID(URI uri) {
 	StringBuilder sb = new StringBuilder(32);
 	String user = uri.getUserInfo();
 	if (user != null) {
@@ -258,6 +258,6 @@ public class UriManager {
 	if (resource != null && resource.length() > 0 && !resource.equals("/")) {
 	    sb.append(resource);
 	}
-	return sb.toString();
+	return JidCreate.fromOrThrowUnchecked(sb);
     }
 }

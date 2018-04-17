@@ -301,10 +301,10 @@ public final class UIComponentRegistry {
      * @return A new instance of the class currently registered as contact item.
      */
     public static ContactItem createContactItem(String alias, String nickname,
-            String fullyQualifiedJID) {
+            CharSequence fullyQualifiedJID) {
         // null breaks instantiation by reflection
         final String nick = nickname != null ? nickname : "";
-        final String jid = fullyQualifiedJID != null ? fullyQualifiedJID : "";
+        final String jid = fullyQualifiedJID != null ? fullyQualifiedJID.toString() : "";
         final String aliass = alias != null ? alias : "";
 
         return instantiate(contactItemClass, aliass, nick, jid);

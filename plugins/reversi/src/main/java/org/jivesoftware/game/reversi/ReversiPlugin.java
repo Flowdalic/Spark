@@ -48,6 +48,7 @@ import org.jivesoftware.spark.ui.ChatRoomListener;
 import org.jivesoftware.spark.ui.ChatRoomListenerAdapter;
 import org.jivesoftware.spark.ui.rooms.ChatRoomImpl;
 import org.jivesoftware.spark.util.log.Log;
+import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.util.XmppStringUtils;
 
@@ -64,7 +65,7 @@ public class ReversiPlugin implements Plugin {
     private StanzaListener gameOfferListener;
 
     private ConcurrentHashMap<String, JPanel> gameOffers;
-    private ConcurrentHashMap<String, JPanel> gameInvitations;
+    private ConcurrentHashMap<Jid, JPanel> gameInvitations;
     
     private JPanel inviteAlert;
 
@@ -75,7 +76,7 @@ public class ReversiPlugin implements Plugin {
         // is a transcript alert
         // UI component.
         gameOffers = new ConcurrentHashMap<String, JPanel>();
-        gameInvitations = new ConcurrentHashMap<String, JPanel>();
+        gameInvitations = new ConcurrentHashMap<>();
 
         // Add Reversi item to chat toolbar.
         addToolbarButton();
@@ -186,7 +187,7 @@ public class ReversiPlugin implements Plugin {
                 {
                     SparkManager.getConnection().sendStanza(reply);
                 }
-                catch ( SmackException.NotConnectedException e1 )
+                catch ( SmackException.NotConnectedException | InterruptedException e1 )
                 {
                     Log.warning( "Unable to accept game offer from " + invitation.getFrom(), e1 );
                 }
@@ -212,13 +213,13 @@ public class ReversiPlugin implements Plugin {
                 // Reject the game offer by sending an error packet.
                 GameOffer reply = new GameOffer();
                 reply.setTo(invitation.getFrom());
-                reply.setStanzaId(invitation.getPacketID());
+                reply.setStanzaId(invitation.getStanzaId());
                 reply.setType(IQ.Type.error);
                 try
                 {
                     SparkManager.getConnection().sendStanza(reply);
                 }
-                catch ( SmackException.NotConnectedException e1 )
+                catch ( SmackException.NotConnectedException | InterruptedException e1 )
                 {
                     Log.warning( "Unable to decline game offer from " + invitation.getFrom(), e1 );
                 }
@@ -295,7 +296,7 @@ public class ReversiPlugin implements Plugin {
                         requestPanel.setPreferredSize(new Dimension(24, 24));
                         request.add(requestPanel, BorderLayout.WEST);
 
-                        String opponentJID = ((ChatRoomImpl) room).getJID();
+                        EntityFullJid opponentJID = ((ChatRoomImpl) room).getJID();
                         String opponentName = "[" + opponentJID + "]"; // TODO:
                                                                        // convert
                                                                        // to

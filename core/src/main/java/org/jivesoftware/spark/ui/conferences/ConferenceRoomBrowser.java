@@ -425,7 +425,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
         if (!isBookmarked) {
             JiveTreeNode node = (JiveTreeNode) serviceTree.getLastSelectedPathComponent();
             if (node == null) {
-                TreePath path = serviceTree.findByName(serviceTree, new String[] { rootNode.toString(), ConferenceServices.getDefaultServiceName() });
+                TreePath path = serviceTree.findByName(serviceTree, new String[] { rootNode.toString(), ConferenceServices.getDefaultServiceName().toString() });
                 node = (JiveTreeNode) path.getLastPathComponent();
             }
             JiveTreeNode roomNode = new JiveTreeNode(roomName, false, SparkRes.getImageIcon(SparkRes.BOOKMARK_ICON));
@@ -440,7 +440,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
             conferences.addBookmark(roomName, roomJID, false);
         } else {
             // Remove bookmark
-            TreePath path = serviceTree.findByName(serviceTree, new String[] { rootNode.toString(), serviceName, roomName });
+            TreePath path = serviceTree.findByName(serviceTree, new String[] { rootNode.toString(), serviceName.toString(), roomName });
             JiveTreeNode node = (JiveTreeNode) path.getLastPathComponent();
             final DefaultTreeModel model = (DefaultTreeModel) serviceTree.getModel();
             model.removeNodeFromParent(node);
@@ -808,8 +808,9 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 		    JOptionPane.INFORMATION_MESSAGE);
 	    return;
 	}
-	final String roomJID = roomsTable.getValueAt(selectedRow, 2) + "@"
+	final String roomJIDString = roomsTable.getValueAt(selectedRow, 2) + "@"
 		+ serviceName;
+    EntityBareJid roomJID = JidCreate.entityBareFromUnescapedOrThrowUnchecked(roomJIDString);
 	final String roomDescription = (String) roomsTable.getValueAt(
 		selectedRow, 1);
 
@@ -850,7 +851,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 	    try {
 		GroupChatRoom room = UIComponentRegistry.createGroupChatRoom(groupChat);
 
-		Resourcepart nickname = Resourcepart.from(pref.getNickname());
+		Resourcepart nickname = pref.getNickname();
 		groupChat.create(nickname);
 		chatManager.getChatContainer().addChatRoom(room);
 		chatManager.getChatContainer().activateChatRoom(room);
@@ -878,8 +879,8 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 
 		// new DataFormDialog(groupChat, form);
 		groupChat.sendConfigurationForm(form);
-        addRoomToTable(groupChat.getRoom(), XmppStringUtils.parseLocalpart(groupChat.getRoom()), 1);
-	    } catch (XMPPException | SmackException e1) {
+        addRoomToTable(groupChat.getRoom(), groupChat.getRoom().getLocalpart(), 1);
+	    } catch (XMPPException | SmackException | InterruptedException e1) {
 		Log.error("Error creating new room.", e1);
 		UIManager.put("OptionPane.okButtonText", Res.getString("ok"));
 		JOptionPane
@@ -902,7 +903,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
      *            the number of occupants in the conference room. If -1 is
      *            specified, the the occupant count will show as n/a.
      */
-    private void addRoomToTable(final EntityBareJid jid, final String roomName,
+    private void addRoomToTable(final EntityBareJid jid, final CharSequence roomName,
 	    final int numberOfOccupants) {
         SwingWorker addRoomThread = new SwingWorker() {
 
@@ -944,8 +945,8 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
                     occupants = "n/a";
                 }
 
-                final Object[] insertRoom = new Object[] { iconLabel, roomName,
-                    XmppStringUtils.parseLocalpart(jid), occupants };
+                final Object[] insertRoom = new Object[] { iconLabel, roomName.toString(),
+                    jid.getLocalpart().toString(), occupants };
                 return insertRoom;
             }
             
@@ -992,7 +993,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 
 	    result = rif.isMembersOnly() || rif.isPasswordProtected();
 
-	} catch (XMPPException | SmackException | NumberFormatException e) {
+	} catch (XMPPException | SmackException | NumberFormatException | InterruptedException e) {
 
 	}
 

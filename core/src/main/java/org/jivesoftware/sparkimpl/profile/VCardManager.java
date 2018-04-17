@@ -573,9 +573,9 @@ public class VCardManager {
      * @param jid the jid of the user.
      * @return the URL of the image. If not image is found, a default avatar is returned.
      */
-    public URL getAvatar(String jid) {
+    public URL getAvatar(BareJid jid) {
         // Handle own avatar file.
-        if (jid != null && XmppStringUtils.parseBareJid(SparkManager.getSessionManager().getJID()).equals(XmppStringUtils.parseBareJid(jid))) {
+        if (jid != null && SparkManager.getSessionManager().getJID().asBareJid().equals(jid)) {
             if (imageFile.exists()) {
                 try {
                     return imageFile.toURI().toURL();

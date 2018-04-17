@@ -82,13 +82,7 @@ public class PresenceManager {
      * @param jidString the jid of the user.
      * @return true if online.
      */
-    public static boolean isOnline(String jidString) {
-        BareJid jid;
-        try {
-            jid = JidCreate.bareFrom(jidString);
-        } catch (XmppStringprepException e) {
-            throw new IllegalStateException(e);
-        }
+    public static boolean isOnline(BareJid jid) {
         final Roster roster = Roster.getInstanceFor( SparkManager.getConnection() );
         Presence presence = roster.getPresence(jid);
         return presence.isAvailable();

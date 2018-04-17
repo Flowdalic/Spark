@@ -124,7 +124,12 @@ public class PrivacyPresenceHandler implements SparkPrivacyItemListener {
         SparkManager.getContactList().updateUI();
     }
 
-    private void setBlockedIconToContact(String jid) {
+    private void setBlockedIconToContact(CharSequence cs) {
+        Jid jid = JidCreate.fromOrThrowUnchecked(cs);
+        setBlockedIconToContact(jid);
+    }
+
+    private void setBlockedIconToContact(Jid jid) {
         Collection<ContactItem> items = SparkManager.getWorkspace().getContactList().getContactItemsByJID(jid);
         for (ContactItem contactItem : items) {
             if (contactItem != null) {
@@ -146,9 +151,9 @@ public class PrivacyPresenceHandler implements SparkPrivacyItemListener {
             if (pItem.getType().equals(PrivacyItem.Type.group)) {
                 ContactGroup group = SparkManager.getWorkspace().getContactList().getContactGroup(pItem.getValue());
                 for (ContactItem citem : group.getContactItems()) {
-                    removeBlockedIconFromContact(citem.getJID());
+                    removeBlockedIconFromContact(citem.getJid());
                     if (pItem.isFilterPresenceOut()) {
-                        sendRealPresenceTo(citem.getJID());
+                        sendRealPresenceTo(citem.getJid());
                     }
                 }
             }
@@ -157,7 +162,12 @@ public class PrivacyPresenceHandler implements SparkPrivacyItemListener {
         SparkManager.getContactList().updateUI();
     }
 
-    private void removeBlockedIconFromContact(String jid) {
+    private void removeBlockedIconFromContact(CharSequence cs) {
+        Jid jid = JidCreate.fromOrThrowUnchecked(cs);
+        removeBlockedIconFromContact(jid);
+    }
+
+    private void removeBlockedIconFromContact(Jid jid) {
         Collection<ContactItem> items = SparkManager.getWorkspace().getContactList().getContactItemsByJID(jid); 
         for (ContactItem item : items) {
             if (item != null) {

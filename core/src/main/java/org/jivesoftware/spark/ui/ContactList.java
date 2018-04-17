@@ -271,7 +271,7 @@ public class ContactList extends JPanel implements ActionListener,
 		for(RosterEntry r : roster)
 		{
 		    Presence p = new Presence(Presence.Type.unavailable);
-		    moveToOfflineGroup(p, r.getUser());
+		    moveToOfflineGroup(p, r.getJid());
 		}
 		return true;
 	    }
@@ -292,7 +292,7 @@ public class ContactList extends JPanel implements ActionListener,
 		final Collection<RosterEntry> roster = Roster.getInstanceFor( SparkManager.getConnection()).getEntries();
 		for (RosterEntry r : roster) {
 		    Presence p = new Presence(Presence.Type.unavailable);
-		    moveToOfflineGroup(p, r.getUser());
+		    moveToOfflineGroup(p, r.getJid());
 		}
 		return true;
 	    }
@@ -334,7 +334,7 @@ public class ContactList extends JPanel implements ActionListener,
             // If not available, move to offline group.
             Presence rosterPresence = PresenceManager.getPresence(bareJID);
             if (!rosterPresence.isAvailable()) {
-                moveToOfflineGroup(presence, bareJID.toString());
+                moveToOfflineGroup(presence, bareJID);
             }
             else {
                 updateContactItemsPresence(rosterPresence, entry, bareJID);
@@ -707,7 +707,7 @@ moveToOffline(moveToOfflineContactItem);
     public void entriesDeleted(final Collection<Jid> addresses) {
         SwingUtilities.invokeLater( () -> {
             for (Jid jid : addresses) {
-                removeContactItem(jid.toString());
+                removeContactItem(jid.asBareJid());
             }
         } );
 
@@ -851,7 +851,7 @@ moveToOffline(moveToOfflineContactItem);
     }
 
     public ContactItem getContactItemByJID(CharSequence jid) {
-        BareJid bareJid = JidCreate.bareFrom(jid);
+        BareJid bareJid = JidCreate.bareFromOrThrowUnchecked(jid);
         return getContactItemByJID(bareJid);
     }
 
@@ -877,10 +877,11 @@ moveToOffline(moveToOfflineContactItem);
      * @param jid the users JID.
      * @return a Collection of <code>ContactItem</code> items.
      */
-    public Collection<ContactItem> getContactItemsByJID(String jid) {
+    public Collection<ContactItem> getContactItemsByJID(Jid jid) {
+        final BareJid bareJid = jid.asBareJid();
         final List<ContactItem> list = new ArrayList<>();
         for (ContactGroup group : getContactGroups()) {
-            ContactItem item = group.getContactItemByJID(XmppStringUtils.parseBareJid(jid));
+            ContactItem item = group.getContactItemByJID(bareJid);
             if (item != null) {
                 list.add(item);
             }
@@ -891,7 +892,7 @@ moveToOffline(moveToOfflineContactItem);
          */
         for( ContactGroup group : getContactGroups() ) {
             for (ContactItem offlineItem : group.getOfflineContacts() ) {
-                if ( offlineItem != null && offlineItem.getJID().equalsIgnoreCase(XmppStringUtils.parseBareJid(jid)) ) {
+                if ( offlineItem != null && offlineItem.getJid().equals(bareJid) ) {
                     if ( !list.contains(offlineItem) ) {
                         list.add(offlineItem);
                     }
@@ -1818,9 +1819,9 @@ SwingUtilities.invokeLater( () -> loadContactList() );
                     {
                         try
                         {
-                            subscriptionRequest( presence.getFrom().toString() );
+                            subscriptionRequest( presence.getFrom().asBareJid() );
                         }
-                        catch ( SmackException.NotConnectedException e )
+                        catch ( SmackException.NotConnectedException | InterruptedException e )
                         {
                             Log.warning( "Unable to process subscription request from: " + presence.getFrom(), e );
                         }
@@ -1833,7 +1834,7 @@ SwingUtilities.invokeLater( () -> loadContactList() );
                     {
                         try
                         {
-                            removeContactItem( presence.getFrom().toString() );
+                            removeContactItem( presence.getFrom().asBareJid() );
                             roster.removeEntry( entry );
                         }
                         catch ( XMPPException | SmackException e )
@@ -1875,7 +1876,7 @@ SwingUtilities.invokeLater( () -> loadContactList() );
                         {
                             try
                             {
-                                removeContactItem( presence.getFrom().toString() );
+                                removeContactItem( presence.getFrom().asBareJid() );
                                 roster.removeEntry( entry );
                             }
                             catch ( XMPPException | SmackException | InterruptedException e )
@@ -1883,7 +1884,7 @@ SwingUtilities.invokeLater( () -> loadContactList() );
                                 Log.error( e );
                             }
                         }
-                        removeContactItem( presence.getFrom().asBareJid().toString() );
+                        removeContactItem( presence.getFrom().asBareJid().asBareJid() );
                     } );
                     break;
 
@@ -2088,7 +2089,7 @@ SwingUtilities.invokeLater( () -> loadContactList() );
         return gList;
     }
 
-    private void subscriptionRequest(final BareJid jid) throws SmackException.NotConnectedException
+    private void subscriptionRequest(final BareJid jid) throws SmackException.NotConnectedException, InterruptedException
     {
         final SubscriptionDialog subscriptionDialog = new SubscriptionDialog();
         subscriptionDialog.invoke(jid);
@@ -2140,7 +2141,7 @@ SwingUtilities.invokeLater( () -> loadContactList() );
    * Selects the first user found with specified jid
    * @param jid, the Users JID
    */
-    public void setSelectedUser(String jid) {
+    public void setSelectedUser(BareJid jid) {
 	for (ContactGroup group : getContactGroups()) {
 	    if (group.getContactItemByJID(jid) != null) {
 

@@ -216,13 +216,13 @@ public class ChatManager implements ChatManagerListener {
      * @param title    the title to use for the room.
      * @return the newly created <code>ChatRoom</code>.
      */
-    public ChatRoom createChatRoom(BareJid userJID, String nickname, String title) {
+    public ChatRoom createChatRoom(BareJid userJID, CharSequence nickname, CharSequence title) {
         ChatRoom chatRoom;
         try {
             chatRoom = getChatContainer().getChatRoom(userJID);
         }
         catch (ChatRoomNotFoundException e) {
-            chatRoom = UIComponentRegistry.createChatRoom(userJID, nickname, title);
+            chatRoom = UIComponentRegistry.createChatRoom(userJID.toString(), nickname.toString(), title.toString());
             getChatContainer().addChatRoom(chatRoom);
         }
 
@@ -314,14 +314,14 @@ public class ChatManager implements ChatManagerListener {
 
         try {
             LocalPreferences pref = SettingsManager.getLocalPreferences();
-            Resourcepart nickname = Resourcepart.from(pref.getNickname());
+            Resourcepart nickname = pref.getNickname();
             chatRoom.create(nickname);
 
             // Send an empty room configuration form which indicates that we want
             // an instant room
             chatRoom.sendConfigurationForm(new Form( DataForm.Type.submit ));
         }
-        catch (XMPPException | SmackException | InterruptedException | XmppStringprepException e1) {
+        catch (XMPPException | SmackException | InterruptedException e1) {
             Log.error("Unable to send conference room chat configuration form.", e1);
             return null;
         }
@@ -336,7 +336,7 @@ public class ChatManager implements ChatManagerListener {
      * @param jid      the jid of the user to chat with.
      * @param nickname the nickname of the user.
      */
-    public void activateChat(final String jid, final String nickname) {
+    public void activateChat(final CharSequence jid, final String nickname) {
         if (!ModelUtil.hasLength(jid)) {
             return;
         }
@@ -366,7 +366,7 @@ public class ChatManager implements ChatManagerListener {
 
             public void finished() {
                 if (chatRoom == null) {
-                    chatRoom = UIComponentRegistry.createChatRoom(jid, nickname, nickname);
+                    chatRoom = UIComponentRegistry.createChatRoom(jid.toString(), nickname, nickname);
                     chatManager.getChatContainer().addChatRoom(chatRoom);
                 }
                 chatManager.getChatContainer().activateChatRoom(chatRoom);
@@ -674,11 +674,12 @@ public class ChatManager implements ChatManagerListener {
      */
     public Icon getIconForContactHandler( String jid )
     {
+        BareJid bareJid = JidCreate.bareFromOrThrowUnchecked(jid);
         for ( ContactItemHandler handler : contactItemHandlers )
         {
             try
             {
-                Icon icon = handler.getIcon( jid );
+                Icon icon = handler.getIcon( bareJid );
                 if ( icon != null )
                 {
                     return icon;
@@ -720,13 +721,13 @@ public class ChatManager implements ChatManagerListener {
         return null;
     }
 
-    public void composingNotification(final String from) {
+    public void composingNotification(final Jid from) {
         SwingUtilities.invokeLater( () -> {
             final ContactList contactList = SparkManager.getWorkspace().getContactList();
 
             ChatRoom chatRoom;
             try {
-                chatRoom = getChatContainer().getChatRoom( XmppStringUtils.parseBareJid(from));
+                chatRoom = getChatContainer().getChatRoom( from.asBareJid() );
                 if (chatRoom != null && chatRoom instanceof ChatRoomImpl) {
                     typingNotificationList.add(chatRoom);
                     // Notify Decorators
@@ -758,7 +759,7 @@ public class ChatManager implements ChatManagerListener {
             catch (ChatRoomNotFoundException e) {
                 // Do nothing
             }
-            contactList.useDefaults(from.toString());
+            contactList.useDefaults(from);
         } );
     }
 
@@ -915,12 +916,12 @@ public class ChatManager implements ChatManagerListener {
 	String query = uri.getQuery();
 	if (query == null) {
 	    // No query string, so assume the URI is xmpp:JID
-	    String jid = _uriManager.retrieveJID(uri);
+	    BareJid jid = _uriManager.retrieveJID(uri).asBareJid();
 
 	    UserManager userManager = SparkManager.getUserManager();
 	    String nickname = userManager.getUserNicknameFromJID(jid);
 	    if (nickname == null) {
-		nickname = jid;
+		nickname = jid.toString();
 	    }
 
 	    ChatManager chatManager = SparkManager.getChatManager();
@@ -988,9 +989,8 @@ public class ChatManager implements ChatManagerListener {
     	@Override
         public void stateChanged(Chat chat, ChatState state, Message message) {
     	    Jid participant = chat.getParticipant();
-    		String participantString = participant.toString();
             if (ChatState.composing.equals(state)) {
-                composingNotification(participantString);
+                composingNotification(participant);
             } else {
             	cancelledNotification(participant, state);
             }

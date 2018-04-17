@@ -35,6 +35,8 @@ import org.jivesoftware.spark.util.SwingTimerTask;
 import org.jivesoftware.spark.util.SwingWorker;
 import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
@@ -310,13 +312,13 @@ public class FastpathPlugin implements Plugin, ConnectionListener {
                 logoutButton.setVisible(true);
                 joinButton.setVisible(false);
                 comboBox.setVisible(false);
-                String workgroup = comboBox.getSelectedItem() + "@" + getComponentAddress();
+                Jid workgroup = JidCreate.fromOrThrowUnchecked(comboBox.getSelectedItem() + "@" + getComponentAddress());
                 if (agentSession != null && agentSession.isOnline()) {
                     try {
                         agentSession.setOnline(false);
                         agentSession.setOnline(true);
                     }
-                    catch (XMPPException | SmackException e) {
+                    catch (XMPPException | SmackException | InterruptedException e) {
                         Log.error(e);
                         leaveWorkgroup();
                         joinButton.setEnabled(true);
@@ -328,7 +330,7 @@ public class FastpathPlugin implements Plugin, ConnectionListener {
                     try {
                         agentSession.setOnline(true);
                     }
-                    catch (XMPPException | SmackException e1) {
+                    catch (XMPPException | SmackException | InterruptedException e1) {
                         Log.error(e1);
                         leaveWorkgroup();
                         joinButton.setEnabled(true);

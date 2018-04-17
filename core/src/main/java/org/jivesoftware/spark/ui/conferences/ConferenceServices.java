@@ -110,7 +110,7 @@ public class ConferenceServices implements InvitationListener {
                         {
                             SparkManager.getConnection().sendStanza(p);
                         }
-                        catch ( SmackException.NotConnectedException e )
+                        catch ( SmackException.NotConnectedException | InterruptedException e )
                         {
                             Log.warning( "Unable to send stanza to " + p.getTo(), e );
                         }
@@ -150,7 +150,7 @@ public class ConferenceServices implements InvitationListener {
                         BookmarkManager manager = BookmarkManager.getBookmarkManager(SparkManager.getConnection());
                         bc = manager.getBookmarkedConferences();
                     }
-                } catch (XMPPException | SmackException error) {
+                } catch (XMPPException | SmackException | InterruptedException error) {
                     Log.error(error);
                 }
                 bookmarksUI.loadUI();
@@ -290,8 +290,8 @@ public class ConferenceServices implements InvitationListener {
             }
         }
 
-        String userName = XmppStringUtils.parseLocalpart(SparkManager.getSessionManager().getJID());
-        final EntityBareJid roomName = JidCreate.entityBareFrom(userName + "_" + StringUtils.randomString(3));
+        Localpart userName = SparkManager.getSessionManager().getJID().getLocalpart();
+        final EntityBareJid roomName = JidCreate.entityBareFromOrThrowUnchecked(userName + "_" + StringUtils.randomString(3));
 
         DomainBareJid serviceName = getDefaultServiceName();
         if (serviceName != null) {
@@ -303,13 +303,13 @@ public class ConferenceServices implements InvitationListener {
         BookmarkedConference bookmarkedConference = null;
         try {
             Collection<BookmarkedConference> bookmarkedConfs = ConferenceUtils.retrieveBookmarkedConferences();
-            String implicitBookmarkedJID = SettingsManager.getLocalPreferences().getDefaultBookmarkedConf();
+            EntityBareJid implicitBookmarkedJID = SettingsManager.getLocalPreferences().getDefaultBookmarkedConf();
             if (bookmarkedConfs != null && !bookmarkedConfs.isEmpty()) {
 
                 // check if the "default" bookmarked conference is still in the bookmarks list:
-                if (implicitBookmarkedJID != null && implicitBookmarkedJID.trim().length() > 0) {
+                if (implicitBookmarkedJID != null) {
                     for (BookmarkedConference bc : bookmarkedConfs) {
-                        if (implicitBookmarkedJID.equalsIgnoreCase(bc.getJid().toString())) {
+                        if (implicitBookmarkedJID.equals(bc.getJid())) {
                             bookmarkedConference = bc;
                             break;
                         }
@@ -322,7 +322,7 @@ public class ConferenceServices implements InvitationListener {
                 }
             }
             return bookmarkedConference;
-        } catch (XMPPException | SmackException ex) {
+        } catch (XMPPException | SmackException | InterruptedException ex) {
             Log.warning("No default bookmark");
             // no bookmark can be retrieved;
         }
@@ -366,14 +366,14 @@ public class ConferenceServices implements InvitationListener {
         }
 
         public void actionPerformed(ActionEvent e) {
-            String userName = XmppStringUtils.parseLocalpart(SparkManager.getSessionManager().getJID());
+            Localpart userName = SparkManager.getSessionManager().getJID().getLocalpart();
             final String roomName = userName + "_" + StringUtils.randomString(3);
 
 
-            final List<String> jids = new ArrayList<>();
+            final List<EntityBareJid> jids = new ArrayList<>();
             jids.add(((ChatRoomImpl)chatRoom).getParticipantJID());
 
-            final String serviceName = getDefaultServiceName();
+            final DomainBareJid serviceName = getDefaultServiceName();
             if (serviceName != null) {
                 SwingWorker worker = new SwingWorker() {
                     public Object construct() {
@@ -398,7 +398,7 @@ public class ConferenceServices implements InvitationListener {
                                         Res.getString("message.please.join.in.conference"), jids);
                             }
                         }
-                        catch (SmackException ex) {
+                        catch (SmackException | InterruptedException ex) {
                         	UIManager.put("OptionPane.okButtonText", Res.getString("ok"));
                             JOptionPane.showMessageDialog(chatRoom, "An error occurred.", Res.getString("title.error"), JOptionPane.ERROR_MESSAGE);
                         }
@@ -438,7 +438,7 @@ public class ConferenceServices implements InvitationListener {
     EntityBareJid bareJID = inviter.asEntityBareJid();
 
     if (_localPreferences.isAutoAcceptMucInvite()) {
-        ConferenceUtils.enterRoomOnSameThread(XmppStringUtils.parseLocalpart(room.getRoom()), room.getRoom(), password);
+        ConferenceUtils.enterRoomOnSameThread(room.getRoom().getLocalpart().toString(), room.getRoom(), password);
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor( SparkManager.getConnection() );
         GroupChatRoom chat = UIComponentRegistry.createGroupChatRoom(manager.getMultiUserChat( room.getRoom() ));
 

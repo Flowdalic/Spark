@@ -107,7 +107,7 @@ public class Enterprise {
                     try {
                         featureInfo = disco.discoverInfo(item.getEntityID());
                     }
-                    catch (XMPPException | SmackException e) {
+                    catch (XMPPException | SmackException | InterruptedException e) {
                         Log.error("Error while retrieving feature list for SparkManager.", e);
                     }
 

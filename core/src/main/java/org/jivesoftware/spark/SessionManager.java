@@ -25,6 +25,7 @@ import org.jivesoftware.spark.ui.PresenceListener;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.manager.Features;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.SwingUtilities;
@@ -47,7 +48,7 @@ public final class SessionManager implements ConnectionListener {
     private String username;
     private String password;
 
-    private String JID;
+    private EntityFullJid JID;
 
     private List<PresenceListener> presenceListeners = new ArrayList<>();
 
@@ -218,7 +219,7 @@ public final class SessionManager implements ConnectionListener {
      *
      * @return the jid of the Spark user.
      */
-    public String getJID() {
+    public EntityFullJid getJID() {
         return JID;
     }
 
@@ -227,8 +228,8 @@ public final class SessionManager implements ConnectionListener {
      *
      * @param jid the jid of the current Spark user.
      */
-    public void setJID(CharSequence jid) {
-        this.JID = jid.toString();
+    public void setJID(EntityFullJid jid) {
+        this.JID = jid;
     }
 
     /**

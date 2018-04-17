@@ -20,6 +20,7 @@ import org.jivesoftware.smack.filter.StanzaIdFilter;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.provider.IQProvider;
 import org.jivesoftware.spark.SparkManager;
+import org.jxmpp.jid.DomainBareJid;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -118,8 +119,9 @@ public class Gateway extends IQ {
      * @param serviceName the service the user belongs to.
      * @param username    the name of the user.
      * @return the JID.
+     * @throws InterruptedException 
      */
-    public static String getJID(String serviceName, String username) throws SmackException.NotConnectedException
+    public static String getJID(DomainBareJid serviceName, String username) throws SmackException.NotConnectedException, InterruptedException
     {
         Gateway registration = new Gateway();
         registration.setType(IQ.Type.set);
@@ -132,7 +134,7 @@ public class Gateway extends IQ {
         {
             con.sendStanza( registration );
 
-            Gateway response = collector.nextResult( SmackConfiguration.getDefaultPacketReplyTimeout() );
+            Gateway response = collector.nextResult();
             return response.getJid();
         }
         finally

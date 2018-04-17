@@ -34,6 +34,7 @@ import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.profile.VCardManager;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Domainpart;
 import org.jxmpp.jid.parts.Localpart;
@@ -202,7 +203,7 @@ public class UserManager {
      * @param nickname      the user's nickname.
      * @return true if the user is either an owner or admin of the room.
      */
-    public boolean isOwnerOrAdmin(GroupChatRoom groupChatRoom, String nickname) {
+    public boolean isOwnerOrAdmin(GroupChatRoom groupChatRoom, Resourcepart nickname) {
         return isOwnerOrAdmin( getOccupant(groupChatRoom, nickname) );
     }
 
@@ -245,7 +246,7 @@ public class UserManager {
      *                      derek as a nickname.
      * @return true if the user is an admin.
      */
-    public boolean isAdmin(GroupChatRoom groupChatRoom, String nickname) {
+    public boolean isAdmin(GroupChatRoom groupChatRoom, Resourcepart nickname) {
         return isAdmin( getOccupant(groupChatRoom, nickname) );
     }
 
@@ -260,7 +261,7 @@ public class UserManager {
         return occupant != null && occupant.getAffiliation() == MUCAffiliation.admin;
     }
 
-    public boolean hasVoice(GroupChatRoom groupChatRoom, String nickname) {
+    public boolean hasVoice(GroupChatRoom groupChatRoom, Resourcepart nickname) {
         Occupant occupant = getOccupant(groupChatRoom, nickname);
         if (occupant != null) {
             if ( MUCRole.visitor == occupant.getRole()) {
@@ -375,11 +376,11 @@ public class UserManager {
      * @param displayName the displayed name of the user.
      * @return the full jid w/ resource of the user.
      */
-    public String getJIDFromDisplayName(Resourcepart displayName) {
+    public EntityFullJid getJIDFromDisplayName(CharSequence displayName) {
         ContactList contactList = SparkManager.getWorkspace().getContactList();
         ContactItem item = contactList.getContactItemByDisplayName(displayName);
         if (item != null) {
-            return getFullJID(item.getJID());
+            return getFullJID(item.getJid());
         }
 
         return null;
@@ -391,9 +392,10 @@ public class UserManager {
      * @param jid the users bare jid.
      * @return the full jid with resource.
      */
-    public String getFullJID(String jid) {
-        Presence presence = PresenceManager.getPresence(jid);
-        return presence.getFrom().toString();
+    public EntityFullJid getFullJID(BareJid bareJid) {
+        Presence presence = PresenceManager.getPresence(bareJid);
+        Jid jid =  presence.getFrom();
+        return jid.asEntityFullJidIfPossible();
     }
 
 
@@ -467,7 +469,7 @@ public class UserManager {
         	    contactField.setSelectetIndex(e);
         	    ContactItem item = contactField.getSelectedContactItem();
         	    MouseEvent exx = new MouseEvent((Component) e.getSource(),e.getID(), e.getWhen(),e.getModifiers(),e.getX()+20, e.getY(), e.getClickCount(), false);
-        	    SparkManager.getContactList().setSelectedUser(item.getJID());
+        	    SparkManager.getContactList().setSelectedUser(item.getJid().asBareJid());
         	    SparkManager.getContactList().showPopup(contactField.getPopup(),exx,item);
         	}
         	
@@ -481,7 +483,7 @@ public class UserManager {
                             parent.setGlassPane(glassPane);
                             parent.getGlassPane().setVisible(false);
                             contactField.dispose();
-                            SparkManager.getChatManager().activateChat(item.getJID(), item.getDisplayName());
+                            SparkManager.getChatManager().activateChat(item.getJid(), item.getDisplayName());
                         }
                     }
                 }

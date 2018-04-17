@@ -149,7 +149,7 @@ public class RoomCreationDialog extends JPanel {
                             //pane.setValue(JOptionPane.UNINITIALIZED_VALUE);
                             pane.removePropertyChangeListener(this);
                             dlg.setVisible(false);
-                            ConferenceUtils.joinConferenceRoom(room.toString(), room.toString());
+                            ConferenceUtils.joinConferenceRoom(room.toString(), room);
                             return;
                         }
                         catch (XMPPException | SmackException | InterruptedException e1) {
@@ -221,10 +221,11 @@ public class RoomCreationDialog extends JPanel {
     }
 
     private MultiUserChat createGroupChat(String roomName, DomainBareJid serviceName) {
-        String room = roomName.replaceAll(" ", "_") + "@" + serviceName;
+        String roomString = roomName.replaceAll(" ", "_") + "@" + serviceName;
+        EntityBareJid room = JidCreate.entityBareFromOrThrowUnchecked(roomString);
 
         // Create a group chat with valid information
-        return MultiUserChatManager.getInstanceFor( SparkManager.getConnection() ).getMultiUserChat( room.toLowerCase() );
+        return MultiUserChatManager.getInstanceFor( SparkManager.getConnection() ).getMultiUserChat( room );
     }
 
 

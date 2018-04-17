@@ -141,8 +141,8 @@ public class BookmarksUI extends JPanel {
                         browseRooms((String)node.getUserObject());
                     }
                     else if (node != null) {
-                        String roomJID = node.getAssociatedObject().toString();
-
+                        String roomJIDString = node.getAssociatedObject().toString();
+                        EntityBareJid roomJID = JidCreate.entityBareFromUnescapedOrThrowUnchecked(roomJIDString);
                         ConferenceUtils.joinConferenceOnSeperateThread(node.getUserObject().toString(), roomJID, null);
                     }
                 }
@@ -231,7 +231,8 @@ public class BookmarksUI extends JPanel {
                 @Override
 				public void actionPerformed(ActionEvent actionEvent) {
                     String roomName = node.getUserObject().toString();
-                    String roomJID = node.getAssociatedObject().toString();
+                    String roomJIDString = node.getAssociatedObject().toString();
+                    EntityBareJid roomJID = JidCreate.entityBareFromUnescapedOrThrowUnchecked(roomJIDString);
                     ConferenceUtils.joinConferenceOnSeperateThread(roomName, roomJID, null);
                 }
             };
@@ -619,7 +620,7 @@ public class BookmarksUI extends JPanel {
             Localpart roomName = roomJID.getLocalpart();
 
             if (bookmark.isAutoJoin()) {
-                ConferenceUtils.joinConferenceOnSeperateThread(roomName.toString(), bookmark.getJid().toString(), bookmark.getPassword());
+                ConferenceUtils.joinConferenceOnSeperateThread(roomName, bookmark.getJid(), bookmark.getPassword());
                 ConferenceUtils.addUnclosableChatRoom(roomJID);
                 autoJoinRooms.add(bookmark.getJid());
             }
