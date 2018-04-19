@@ -33,6 +33,7 @@ import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.profile.VCardManager;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
@@ -136,7 +137,7 @@ public class UserManager {
      *                for the bare jid.
      * @return a Collection of jids found in the room.
      */
-    public Collection<String> getUserJidsInRoom(String room, boolean fullJID) {
+    public Collection<String> getUserJidsInRoom(EntityBareJid room, boolean fullJID) {
         return new ArrayList<>();
     }
 
@@ -309,12 +310,7 @@ public class UserManager {
 
     public Resourcepart getUserNicknameAsResourcepartFromJID(BareJid jid) {
         String nicknameString = getUserNicknameFromJID(jid);
-        Resourcepart resourcepart;
-        try {
-            resourcepart = Resourcepart.from(nicknameString);
-        } catch (XmppStringprepException e) {
-            throw new IllegalStateException(e);
-        }
+        Resourcepart resourcepart = Resourcepart.fromOrThrowUnchecked(nicknameString);
         return resourcepart;
     }
 

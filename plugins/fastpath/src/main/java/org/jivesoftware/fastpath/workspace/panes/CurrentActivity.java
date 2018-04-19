@@ -64,6 +64,13 @@ import org.jivesoftware.spark.util.SwingWorker;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.jid.util.JidUtil;
 import org.jxmpp.util.XmppStringUtils;
 
 /**
@@ -144,7 +151,7 @@ public final class CurrentActivity extends JPanel {
                 {
                     agentRoster = FastpathPlugin.getAgentSession().getAgentRoster();
                 }
-                catch ( SmackException.NotConnectedException e )
+                catch ( SmackException.NotConnectedException | InterruptedException e )
                 {
                     Log.error( "Unable to get agent roster.", e );
                 }
@@ -161,8 +168,7 @@ public final class CurrentActivity extends JPanel {
                     }
 
                     public void presenceChanged(Presence presence) {
-                        String agentJID = XmppStringUtils.parseBareJid(presence.getFrom());
-                        agentJID = UserManager.unescapeJID(agentJID);
+                        BareJid agentJID = presence.getFrom().asBareJid();
                         AgentStatus agentStatus = (AgentStatus)presence.getExtension("agent-status", "http://jabber.org/protocol/workgroup");
 
                         String status = presence.getStatus();
@@ -207,13 +213,13 @@ public final class CurrentActivity extends JPanel {
     }
 
 
-    private void addAgentChat(String agent, String visitor, String email, String question, Date startDate, String session) {
+    private void addAgentChat(Jid agent, String visitor, String email, String question, Date startDate, String session) {
         // Update counter.
         counter++;
         activeConversations.setText(Integer.toString(counter));
 
         // Conversation Item
-        ConversationItem item = new ConversationItem(agent, visitor, startDate, email, question, session);
+        ConversationItem item = new ConversationItem(agent.asUnescapedString(), visitor, startDate, email, question, session);
         model.addElement(item);
     }
 
@@ -238,16 +244,16 @@ public final class CurrentActivity extends JPanel {
                             // Get Conference
                             try {
                                 final MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor( SparkManager.getConnection() );
-                                Collection col = multiUserChatManager.getServiceNames();
+                                List<DomainBareJid> col = multiUserChatManager.getXMPPServiceDomains();
                                 if (col.size() == 0) {
                                     return;
                                 }
 
-                                String serviceName = (String)col.iterator().next();
-                                String roomName = sessionID + "@" + serviceName;
+                                DomainBareJid serviceName = col.iterator().next();
+                                EntityBareJid roomName = JidCreate.entityBareFromOrThrowUnchecked(sessionID + "@" + serviceName);
 
                                 final LocalPreferences pref = SettingsManager.getLocalPreferences();
-                                final String nickname = pref.getNickname();
+                                final Resourcepart nickname = pref.getNickname();
                                 MultiUserChat muc = multiUserChatManager.getMultiUserChat(roomName);
 
                                 ConferenceUtils.enterRoom(muc, roomName, nickname, null);
@@ -263,17 +269,19 @@ public final class CurrentActivity extends JPanel {
                                     }
                                     Iterator iter = owners.iterator();
 
-                                    List<String> list = new ArrayList<String>();
+                                    List<Jid> list = new ArrayList<>();
                                     while (iter.hasNext()) {
                                         Affiliate affilitate = (Affiliate)iter.next();
-                                        String jid = affilitate.getJid();
-                                        if (!jid.equals(SparkManager.getSessionManager().getBareAddress())) {
+                                        Jid jid = affilitate.getJid();
+                                        if (!jid.equals(SparkManager.getSessionManager().getBareUserAddress())) {
                                             list.add(jid);
                                         }
                                     }
                                     if (list.size() > 0) {
                                         Form form = muc.getConfigurationForm().createAnswerForm();
-                                        form.setAnswer("muc#roomconfig_roomowners", list);
+                                        List<String> jidStrings = new ArrayList<>(list.size());
+                                        JidUtil.toStrings(list, jidStrings);
+                                        form.setAnswer("muc#roomconfig_roomowners", jidStrings);
 
                                         // new DataFormDialog(groupChat, form);
                                         muc.sendConfigurationForm(form);
@@ -298,22 +306,21 @@ public final class CurrentActivity extends JPanel {
                             try {
                                 FastpathPlugin.getAgentSession().makeRoomOwner(SparkManager.getConnection(), sessionID);
                                 MultiUserChatManager manager = MultiUserChatManager.getInstanceFor( SparkManager.getConnection() );
-                                Collection<String> col = manager.getServiceNames();
+                                List<DomainBareJid> col = manager.getXMPPServiceDomains();
                                 if (col.size() == 0) {
                                     return;
                                 }
 
-                                String serviceName = (String)col.iterator().next();
-                                String roomName = sessionID + "@" + serviceName;
+                                DomainBareJid serviceName = col.iterator().next();
+                                EntityBareJid roomName = JidCreate.entityBareFromOrThrowUnchecked(sessionID + "@" + serviceName);
 
                                 LocalPreferences pref = SettingsManager.getLocalPreferences();
-                                final String nickname = pref.getNickname();
+                                final Resourcepart nickname = pref.getNickname();
                                 MultiUserChat muc = manager.getMultiUserChat( roomName );
 
                                 ConferenceUtils.enterRoom(muc, roomName, nickname, null);
-
                             }
-                            catch (XMPPException | SmackException e1) {
+                            catch (XMPPException | SmackException | InterruptedException e1) {
                                 Log.error(e1);
                             }
                         }
@@ -324,7 +331,7 @@ public final class CurrentActivity extends JPanel {
                     menu.show(list, e.getX(), e.getY());
                 }
             }
-            catch (XMPPException | SmackException e1) {
+            catch (XMPPException | SmackException | InterruptedException e1) {
                 Log.error(e1);
                 return;
             }

@@ -256,7 +256,7 @@ public final class SessionManager implements ConnectionListener {
      * be derek@jivesoftware.com)
      *
      * @return the users bare address.
-     * @deprecated use {@link #getUserAddress()} instead.
+     * @deprecated use {@link #getBareUserAddress()} instead.
      */
     @Deprecated
     public String getBareAddress() {
@@ -269,7 +269,7 @@ public final class SessionManager implements ConnectionListener {
      *
      * @return the users bare address.
      */
-    public EntityBareJid getUserAddress() {
+    public EntityBareJid getBareUserAddress() {
         return userBareAddress;
     }
 

@@ -874,7 +874,7 @@ public class ConferenceRoomBrowser extends JPanel implements ActionListener,
 		}
 
 		List<String> owners = new ArrayList<>();
-		owners.add(SparkManager.getSessionManager().getUserAddress().toString());
+		owners.add(SparkManager.getSessionManager().getBareUserAddress().toString());
 		form.setAnswer("muc#roomconfig_roomowners", owners);
 
 		// new DataFormDialog(groupChat, form);

@@ -143,7 +143,7 @@ public class ChatRoomImpl extends ChatRoom {
         );
 
         final StanzaFilter carbonFilter = new AndFilter(
-            FromMatchesFilter.create( SparkManager.getSessionManager().getUserAddress() ), // Security Consideration, see https://xmpp.org/extensions/xep-0280.html#security
+            FromMatchesFilter.create( SparkManager.getSessionManager().getBareUserAddress() ), // Security Consideration, see https://xmpp.org/extensions/xep-0280.html#security
             new StanzaTypeFilter( Message.class ),
             new OrFilter(
                 new StanzaExtensionFilter( "sent", CarbonExtension.NAMESPACE ),
@@ -769,7 +769,7 @@ public class ChatRoomImpl extends ChatRoom {
     			String messageBody = message.getBody();
     			if (nickname.equals(message.getFrom().toString())) {
     				BareJid otherJID = message.getFrom().asBareJid();
-    				EntityBareJid myJID = SparkManager.getSessionManager().getUserAddress();
+    				EntityBareJid myJID = SparkManager.getSessionManager().getBareUserAddress();
 
     				if (otherJID.equals(myJID)) {
     					nickname = personalNickname;

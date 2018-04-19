@@ -49,7 +49,6 @@ import org.jivesoftware.sparkimpl.profile.ext.VCardUpdateExtension;
 import org.jivesoftware.sparkimpl.settings.local.LocalPreferences;
 import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
 import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
@@ -170,7 +169,7 @@ public class ContactItem extends JPanel {
 		} else if (nickname != null && !nickname.trim().isEmpty()) {
 			displayName = nickname.trim();
 		} else {
-			displayName = getJID();
+			displayName = getJid().toString();
 		}
 
 		if (displayName != null) {

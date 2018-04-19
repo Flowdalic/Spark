@@ -386,7 +386,7 @@ public class CoBrowser extends JPanel implements ActionListener, BrowserListener
 
             groupChatRoom.getMultiUserChat().sendMessage(message);
         }
-        catch (SmackException ex) {
+        catch (SmackException | InterruptedException ex) {
             Log.error("Unable to send message in conference chat.", ex);
         }
 
