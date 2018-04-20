@@ -109,7 +109,8 @@ public class ContactList extends JPanel implements ActionListener,
     
     private ContactItem contactItem;
     
-    private String name, user;
+    private String name;
+    private BareJid user;
 
 
     public static final String RETRY_PANEL = "RETRY_PANEL";
@@ -486,7 +487,7 @@ public class ContactList extends JPanel implements ActionListener,
                         //Reconnection and not in dispatch Thread -> Add to EVentQueue
                         EventQueue.invokeLater( () -> {
 
-                            final ContactItem changeContact = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+                            final ContactItem changeContact = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
                             staticContactGroup.addContactItem(changeContact);
                             changeContact.setPresence(staticItemPrecense);
                             changeContact.setAvailable(true);
@@ -511,7 +512,7 @@ public class ContactList extends JPanel implements ActionListener,
                 // dispatch thread
                 if (EventQueue.isDispatchThread()) {
 
-                    contactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+                    contactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
                     ContactGroup unfiledGrp = getUnfiledGroup();
                     unfiledGrp.addContactItem(contactItem);
                     contactItem.setPresence(presence);
@@ -526,7 +527,7 @@ public class ContactList extends JPanel implements ActionListener,
                 } else {
                     final Presence staticItemPrecense = presence;
                     EventQueue.invokeLater( () -> {
-                        contactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+                        contactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
                         ContactGroup unfiledGrp = getUnfiledGroup();
 
                         contactItem.setPresence(staticItemPrecense);
@@ -562,7 +563,7 @@ public class ContactList extends JPanel implements ActionListener,
         	if(group.getName() == null || Objects.equals( group.getName(), "" ) ){
         		for(RosterEntry entry : group.getEntries()){
         			
-				ContactItem buildContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+				ContactItem buildContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
                     moveToOffline(buildContactItem);
         		}
         	}else{
@@ -575,10 +576,10 @@ public class ContactList extends JPanel implements ActionListener,
 	            for (RosterEntry entry : group.getEntries()) {
 	            	contactItem = null;
 	            	name = entry.getName();
-	            	user = entry.getUser();
+	            	user = entry.getJid();
 	            	// in case of connection lost, the creation must be done in eventqueue
 	            	if(EventQueue.isDispatchThread()) {
-				contactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+				contactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
 	            	}
 	            	else {
 	            		try {
@@ -611,7 +612,7 @@ public class ContactList extends JPanel implements ActionListener,
         if (EventQueue.isDispatchThread()) {
             // Add Unfiled Group
             for (RosterEntry entry : roster.getUnfiledEntries()) {
-                ContactItem moveToOfflineContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+                ContactItem moveToOfflineContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
                 moveToOffline(moveToOfflineContactItem);
             }
         }
@@ -620,7 +621,7 @@ public class ContactList extends JPanel implements ActionListener,
         	try {
         	EventQueue.invokeAndWait( () -> {
 for (RosterEntry entry : roster.getUnfiledEntries()) {
-ContactItem moveToOfflineContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+ContactItem moveToOfflineContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
 moveToOffline(moveToOfflineContactItem);
 }
             } );
@@ -654,7 +655,7 @@ moveToOffline(moveToOfflineContactItem);
      * @param entry the <code>RosterEntry</code> of the the user.
      */
     private void addUser(RosterEntry entry) {
-        ContactItem newContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getUser());
+        ContactItem newContactItem = UIComponentRegistry.createContactItem(entry.getName(), null, entry.getJid());
 
         if (entry.getType() == RosterPacket.ItemType.none || entry.getType() == RosterPacket.ItemType.from) {
             // Ignore, since the new user is pending to be added.
@@ -738,7 +739,7 @@ moveToOffline(moveToOfflineContactItem);
                             ContactGroup contactGroup = addContactGroup(group.getName());
                             contactGroup.setVisible(false);
                             contactGroup = getContactGroup(group.getName());
-                            ContactItem contactItem1 = UIComponentRegistry.createContactItem(rosterEntry.getName(), null, rosterEntry.getUser());
+                            ContactItem contactItem1 = UIComponentRegistry.createContactItem(rosterEntry.getName(), null, rosterEntry.getJid());
                             contactGroup.addContactItem( contactItem1 );
                             Presence presence = PresenceManager.getPresence(jid.asBareJid());
                             contactItem1.setPresence(presence);
@@ -754,7 +755,7 @@ moveToOffline(moveToOfflineContactItem);
                             }
                             // Check to see if this entry is new to a pre-existing group.
                             if (item == null) {
-                                item = UIComponentRegistry.createContactItem(rosterEntry.getName(), null, rosterEntry.getUser());
+                                item = UIComponentRegistry.createContactItem(rosterEntry.getName(), null, rosterEntry.getJid());
                                 Presence presence = PresenceManager.getPresence(jid.asBareJid());
                                 item.setPresence(presence);
                                 if (presence.isAvailable()) {
@@ -1862,7 +1863,7 @@ SwingUtilities.invokeLater( () -> loadContactList() );
                     // If item is not in the Contact List, add them.
                     if ( item == null && entry != null )
                     {
-                        final ContactItem newItem = UIComponentRegistry.createContactItem( entry.getName(), null, jid.toString() );
+                        final ContactItem newItem = UIComponentRegistry.createContactItem( entry.getName(), null, jid );
                         moveToOffline( newItem );
                         offlineGroup.fireContactGroupUpdated();
                     }
@@ -2558,11 +2559,11 @@ SwingUtilities.invokeLater( () -> loadContactList() );
             }
             if (contactGroup != null) {
                 isFiled = true;
-                contactGroup.addOfflineContactItem(contactItem.getAlias(), contactItem.getNickname(), contactItem.getJID(), contactItem.getStatus());
+                contactGroup.addOfflineContactItem(contactItem.getAlias(), contactItem.getNickname(), contactItem.getJid(), contactItem.getStatus());
             }
         }
         if (!isFiled) {
-            getUnfiledGroup().addOfflineContactItem(contactItem.getAlias(), contactItem.getNickname(), contactItem.getJID(), contactItem.getStatus());
+            getUnfiledGroup().addOfflineContactItem(contactItem.getAlias(), contactItem.getNickname(), contactItem.getJid(), contactItem.getStatus());
         }
         
         if( !localPreferences.isOfflineUsersShown() )

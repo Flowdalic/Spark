@@ -940,7 +940,10 @@ public class GroupChatRoom extends ChatRoom
 
         chat.addSubjectUpdatedListener( ( subject, by ) -> {
             subjectPanel.setSubject( subject );
-            final Resourcepart nickname = by.getResourcepart();
+            Resourcepart nickname = Resourcepart.EMPTY;
+            if (by != null) {
+                nickname = by.getResourcepart();
+            }
             final String insertMessage = Res.getString( "message.subject.has.been.changed.to", subject, nickname );
             getTranscriptWindow().insertNotificationMessage( insertMessage, ChatManager.NOTIFICATION_COLOR );
         } );

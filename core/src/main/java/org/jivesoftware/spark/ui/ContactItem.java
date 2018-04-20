@@ -163,13 +163,16 @@ public class ContactItem extends JPanel {
 	 * @return a name suitable to be displayed
 	 */
     public String getDisplayName() {
-    	final String displayName;
+    	String displayName = null;
 		if (alias != null && !alias.trim().isEmpty()) {
 			displayName = alias.trim();
 		} else if (nickname != null && !nickname.trim().isEmpty()) {
 			displayName = nickname.trim();
 		} else {
-			displayName = getJid().toString();
+		    BareJid bareJid = getJid();
+		    if (bareJid != null) {
+		        displayName = bareJid.toString();
+		    }
 		}
 
 		if (displayName != null) {

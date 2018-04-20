@@ -164,7 +164,7 @@ public class ContactGroup extends CollapsiblePane implements MouseListener {
      * @param jid      the jid of the offline contact.
      * @param status   the current status of the offline contact.
      */
-    public void addOfflineContactItem(final String alias, final String nickname, final String jid, final String status) {
+    public void addOfflineContactItem(final String alias, final String nickname, final BareJid jid, final String status) {
     	if(EventQueue.isDispatchThread()) {
     	   // Build new ContactItem
 	   final ContactItem offlineItem = UIComponentRegistry.createContactItem(alias, nickname, jid);

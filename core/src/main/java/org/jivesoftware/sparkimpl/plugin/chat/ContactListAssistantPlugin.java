@@ -259,7 +259,7 @@ public class ContactListAssistantPlugin implements Plugin {
      * @param move         true if the ContactItem should be moved, otherwise false.
      */
     private void addContactItem(final ContactGroup contactGroup, final ContactItem item, final boolean move) {
-        ContactItem newContact = UIComponentRegistry.createContactItem(item.getAlias(), item.getNickname(), item.getJID());
+        ContactItem newContact = UIComponentRegistry.createContactItem(item.getAlias(), item.getNickname(), item.getJid());
         newContact.setPresence(item.getPresence());
         newContact.setIcon(item.getIcon());
         newContact.getNicknameLabel().setFont(item.getNicknameLabel().getFont());
@@ -271,7 +271,7 @@ public class ContactListAssistantPlugin implements Plugin {
         }
 
         if (!PresenceManager.isOnline(item.getJid().asBareJid())) {
-            contactGroup.addOfflineContactItem(item.getAlias(), item.getNickname(), item.getJID(), null);
+            contactGroup.addOfflineContactItem(item.getAlias(), item.getNickname(), item.getJid(), null);
         }
         else {
             groupHadAvailableContacts = contactGroup.hasAvailableContacts();
