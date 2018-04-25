@@ -18,6 +18,7 @@ package org.jivesoftware.spark.ui.conferences;
 import org.jivesoftware.resource.Res;
 import org.jivesoftware.resource.SparkRes;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bookmarks.BookmarkManager;
 import org.jivesoftware.smackx.bookmarks.BookmarkedConference;
@@ -383,8 +384,7 @@ public class BookmarksUI extends JPanel {
                     return;
                 }
 
-                for (Object mucService : mucServices) {
-                    String service = (String) mucService;
+                for (DomainBareJid service : mucServices) {
                     if (!hasService(service)) {
                         addServiceToList(service);
                     }
@@ -401,8 +401,8 @@ public class BookmarksUI extends JPanel {
      * @param service the new service.
      * @return the new service node created.
      */
-    public JiveTreeNode addServiceToList(String service) {
-        final JiveTreeNode serviceNode = new JiveTreeNode(service, true, SparkRes.getImageIcon(SparkRes.SERVER_ICON));
+    public JiveTreeNode addServiceToList(DomainBareJid service) {
+        final JiveTreeNode serviceNode = new JiveTreeNode(service.toString(), true, SparkRes.getImageIcon(SparkRes.SERVER_ICON));
         rootNode.add(serviceNode);
         final DefaultTreeModel model = (DefaultTreeModel)tree.getModel();
         model.nodeStructureChanged(rootNode);
@@ -488,7 +488,7 @@ public class BookmarksUI extends JPanel {
                     serviceField.setText("");
                 }
                 else {
-                    final List<String> serviceList = new ArrayList<>();
+                    final List<DomainBareJid> serviceList = new ArrayList<>();
                     serviceField.setText(Res.getString("message.searching.please.wait"));
                     serviceField.setEnabled(false);
                     addButton.setEnabled(false);
@@ -497,22 +497,21 @@ public class BookmarksUI extends JPanel {
 
                         @Override
                         public Object construct() {
-                            ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(SparkManager.getConnection());
+                            XMPPConnection connection = SparkManager.getConnection();
+                            ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(connection);
 
                             try {
-                                Jid conferenceServiceJid = JidCreate.from(conferenceService);
+                                DomainBareJid conferenceServiceJid = JidCreate.domainBareFrom(conferenceService);
                                 discoInfo = discoManager.discoverInfo(conferenceServiceJid);
                                 for (DiscoverInfo.Identity identity : discoInfo.getIdentities() ) {
                                     if ("conference".equals(identity.getCategory())) {
-                                        serviceList.add(conferenceService);
+                                        serviceList.add(conferenceServiceJid);
                                         break;
                                     }
                                     else if ("server".equals(identity.getCategory())) {
                                         try {
-                                            Collection<String> services = getConferenceServices(conferenceService);
-                                            for (String service : services) {
-                                                serviceList.add(service);
-                                            }
+                                            Collection<DomainBareJid> services = getConferenceServices(conferenceServiceJid);
+                                            serviceList.addAll(services);
                                         }
                                         catch (Exception e1) {
                                             Log.error("Unable to load conference services in server.", e1);
@@ -530,7 +529,7 @@ public class BookmarksUI extends JPanel {
                         @Override
                         public void finished() {
                             if (discoInfo != null) {
-                                for (String aServiceList : serviceList) {
+                                for (DomainBareJid aServiceList : serviceList) {
                                 	if (!hasService(aServiceList)) {
                                 		addServiceToList(aServiceList);
                                 	}
@@ -568,14 +567,14 @@ public class BookmarksUI extends JPanel {
         return servicePanel;
     }
 
-    private Collection<String> getConferenceServices(String serverString) throws Exception {
-        Jid server = JidCreate.from(serverString);
-        List<String> answer = new ArrayList<>();
+    private Collection<DomainBareJid> getConferenceServices(DomainBareJid server) throws Exception {
+        List<DomainBareJid> answer = new ArrayList<>();
         ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(SparkManager.getConnection());
         DiscoverItems items = discoManager.discoverItems(server);
         for (DiscoverItems.Item item : items.getItems()) {
-            String entityID = item.getEntityID().toString();
-            if (entityID.startsWith("conference") || entityID.startsWith("private")) {
+            DomainBareJid entityID = item.getEntityID().asDomainBareJid();
+            // TODO: We should not simply assumet that this is MUC service just because it starts with a given prefix.
+            if (entityID.toString().startsWith("conference") || entityID.toString().startsWith("private")) {
                 answer.add(entityID);
             }
             else {
@@ -593,8 +592,8 @@ public class BookmarksUI extends JPanel {
         return answer;
     }
 
-    private boolean hasService(String service) {
-        TreePath path = tree.findByName(tree, new String[]{rootNode.getUserObject().toString(), service});
+    private boolean hasService(CharSequence service) {
+        TreePath path = tree.findByName(tree, new String[]{rootNode.getUserObject().toString(), service.toString()});
         return path != null;
     }
 
@@ -629,7 +628,7 @@ public class BookmarksUI extends JPanel {
             TreePath path = tree.findByName(tree, new String[]{rootNode.getUserObject().toString(), serviceName.toString()});
             JiveTreeNode serviceNode;
             if (path == null) {
-                serviceNode = addServiceToList(serviceName.toString());
+                serviceNode = addServiceToList(serviceName);
                 path = tree.findByName(tree, new String[]{rootNode.getUserObject().toString(), serviceName.toString()});
             }
             else {
