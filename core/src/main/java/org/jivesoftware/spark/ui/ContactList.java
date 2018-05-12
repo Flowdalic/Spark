@@ -1231,7 +1231,7 @@ moveToOffline(moveToOfflineContactItem);
         }
         else if (e.getSource() == chatMenu) {
             if (activeItem != null) {
-                SparkManager.getChatManager().activateChat(activeItem.getJID(), activeItem.getDisplayName());
+                SparkManager.getChatManager().activateChat(activeItem.getJid(), activeItem.getDisplayName());
             }
         }
         else if (e.getSource() == addContactMenu) {

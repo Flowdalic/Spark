@@ -48,7 +48,7 @@ public class ContactGroup extends CollapsiblePane implements MouseListener {
 
     private String groupName;
     private DefaultListModel model;
-    private JList contactItemList;
+    private JList<? extends ContactItem> contactItemList;
     private boolean sharedGroup;
     private JPanel listPanel;
 
