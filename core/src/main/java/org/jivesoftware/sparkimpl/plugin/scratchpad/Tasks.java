@@ -192,14 +192,14 @@ public class Tasks implements PrivateData {
         }
     }
 
+    static {
+        PrivateDataManager.addPrivateDataProvider("scratchpad", "scratchpad:tasks", new Tasks.Provider());
+    }
+
     public static Tasks getTaskList(XMPPConnection con) {
         PrivateDataManager manager = PrivateDataManager.getInstanceFor( con );
 
-        PrivateDataManager.addPrivateDataProvider("scratchpad", "scratchpad:tasks", new Tasks.Provider());
-
-
         Tasks tasks = null;
-
         try {
             tasks = (Tasks)manager.getPrivateData("scratchpad", "scratchpad:tasks");
         }
