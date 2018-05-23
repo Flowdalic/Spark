@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.jivesoftware.smackx.workgroup.settings.ChatSetting;
-import org.jxmpp.jid.EntityJid;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 
 public class FormText {
@@ -130,7 +130,7 @@ public class FormText {
     }
 
     public static String getTextSetting(String key, String workgroupString) {
-        EntityJid workgroup = JidCreate.entityFromUnescapedOrThrowUnchecked(workgroupString);
+        EntityBareJid workgroup = JidCreate.entityBareFromUnescapedOrThrowUnchecked(workgroupString);
         WorkgroupManager settingsManager = WorkgroupManager.getInstance();
         ChatSetting chatSettings = settingsManager.getChatSetting(key, workgroup);
 

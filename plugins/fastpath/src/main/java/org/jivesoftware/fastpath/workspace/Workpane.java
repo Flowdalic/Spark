@@ -54,6 +54,7 @@ import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
 import org.jivesoftware.sparkimpl.plugin.alerts.SparkToaster;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.util.XmppStringUtils;
@@ -361,17 +362,17 @@ public class Workpane {
 
         boolean ok = dialog.hasSelectedAgent(room, transfer);
         if (ok) {
-            String jid = dialog.getSelectedJID();
-            jid = UserManager.escapeJID(jid);
+            String jidString = dialog.getSelectedJID();
+            Jid jid = JidCreate.fromUnescapedOrThrowUnchecked(jidString);
 
             String message = dialog.getMessage();
 
             // Determine who to send to.
-            if (jid.contains("/")) {
+            if (jid.hasResource()) {
                 // Queueu
                 InvitationManager.transferOrInviteToQueue(room, workgroup, sessionID, jid, message, transfer);
             }
-            else if ( XmppStringUtils.parseDomain(jid).startsWith("workgroup")) {
+            else if (jid.getDomain().toString().startsWith("workgroup")) {
                 InvitationManager.transferOrInviteToWorkgroup(room, workgroup, sessionID, jid, message, transfer);
             }
             else {

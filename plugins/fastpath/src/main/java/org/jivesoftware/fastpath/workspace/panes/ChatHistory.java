@@ -144,7 +144,7 @@ public class ChatHistory extends JPanel {
         agentSession = FastpathPlugin.getAgentSession();
         EntityBareJid jid = SparkManager.getSessionManager().getBareUserAddress();
         try {
-            history = agentSession.getAgentHistory(jid.toString(), 10, null);
+            history = agentSession.getAgentHistory(jid, 10, null);
         }
         catch (XMPPException | SmackException | InterruptedException e1) {
             Log.error("Error retrieving chat history.", e1);
