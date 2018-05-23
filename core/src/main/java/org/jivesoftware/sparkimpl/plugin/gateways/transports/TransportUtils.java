@@ -153,7 +153,7 @@ public class TransportUtils {
 
         ServiceDiscoveryManager discoveryManager = ServiceDiscoveryManager.getInstanceFor(con);
         try {
-            Jid jid = JidCreate.from(transport.getServiceName());
+            Jid jid = JidCreate.from(transport.getXMPPServiceDomain());
             DiscoverInfo info = discoveryManager.discoverInfo(jid);
             return info.containsFeature("jabber:iq:registered");
         }
@@ -227,7 +227,7 @@ public class TransportUtils {
             return "jabber:iq:gateway:register";
         }
 
-        public String toXML() {
+        public String toXML(String enclosingNamespace) {
             String builder = "<" + getElementName() + " xmlns=\"" + getNamespace() +
                     "\"/>";
             return builder;

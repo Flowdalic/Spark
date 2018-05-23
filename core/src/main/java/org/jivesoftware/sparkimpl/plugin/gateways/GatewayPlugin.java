@@ -279,7 +279,7 @@ public class GatewayPlugin implements Plugin, ContactItemHandler {
                     }
                     // Create new presence
                     Presence p = new Presence(presence.getType(), presence.getStatus(), presence.getPriority(), presence.getMode());
-                    p.setTo(transport.getServiceName());
+                    p.setTo(transport.getXMPPServiceDomain());
                     try
                     {
                         SparkManager.getConnection().sendStanza(p);

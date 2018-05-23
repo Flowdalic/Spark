@@ -3,7 +3,7 @@ package org.jivesoftware.spark.ui.conferences;
 import org.jivesoftware.resource.Res;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.spark.SparkManager;
@@ -146,12 +146,12 @@ public class JoinRoomSwingWorker extends SwingWorker
         catch ( XMPPException | SmackException | InterruptedException ex )
         {
             Log.error( "An exception occurred while trying to join room '" + roomJID + "'.", ex );
-            XMPPError error = null;
+            StanzaError error = null;
             if ( ex instanceof XMPPException.XMPPErrorException )
             {
                 error = ( (XMPPException.XMPPErrorException) ex ).getXMPPError();
 
-                if ( XMPPError.Condition.conflict.equals( error.getCondition() ) )
+                if ( StanzaError.Condition.conflict.equals( error.getCondition() ) )
                 {
                     final Object userInput = JOptionPane.showInputDialog(
                             SparkManager.getMainWindow(),

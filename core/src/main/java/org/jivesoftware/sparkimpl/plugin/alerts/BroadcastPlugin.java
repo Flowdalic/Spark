@@ -146,7 +146,7 @@ public class BroadcastPlugin extends SparkTabHandler implements Plugin, StanzaLi
             if (ModelUtil.hasLength(jid) && ModelUtil.hasLength( XmppStringUtils.parseDomain(jid))) {
                 if (ModelUtil.hasLength(jid) && jid.indexOf('@') == -1) {
                     // Append server address
-                    jid = jid + "@" + SparkManager.getConnection().getServiceName();
+                    jid = jid + "@" + SparkManager.getConnection().getXMPPServiceDomain();
                 }
 
                 EntityBareJid entityBareJid = JidCreate.entityBareFromUnescapedOrThrowUnchecked(jid);

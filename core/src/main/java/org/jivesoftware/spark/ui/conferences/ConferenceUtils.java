@@ -19,7 +19,7 @@ import org.jivesoftware.resource.Res;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smackx.bookmarks.BookmarkManager;
 import org.jivesoftware.smackx.bookmarks.BookmarkedConference;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
@@ -112,8 +112,8 @@ public class ConferenceUtils {
 
 
             if (label != null && "Creation date".equalsIgnoreCase(label)) {
-                for ( String value : field.getValues() ) {
-                    creationDate = value;
+                for ( CharSequence value : field.getValues() ) {
+                    creationDate = value.toString();
                     Date date = dateFormatter.parse(creationDate);
                     creationDate = DateFormat.getDateTimeInstance(DateFormat.FULL,DateFormat.MEDIUM).format(date);
                 }
@@ -207,7 +207,7 @@ public class ConferenceUtils {
             }
             catch ( XMPPException | SmackException | InterruptedException ex )
             {
-                XMPPError error = null;
+                StanzaError error = null;
                 if ( ex instanceof XMPPException.XMPPErrorException )
                 {
                     error = ( (XMPPException.XMPPErrorException) ex ).getXMPPError();
@@ -347,7 +347,7 @@ public class ConferenceUtils {
      * @return the reason for the exception.
      * @see <a href="http://xmpp.org/extensions/xep-0045.html#enter-errorcodes">XEP-0045 Error Conditions</a>
      */
-    public static String getReason(XMPPError error) {
+    public static String getReason(StanzaError error) {
         if (error == null) {
             return Res.getString("message.error.no.response");
         }

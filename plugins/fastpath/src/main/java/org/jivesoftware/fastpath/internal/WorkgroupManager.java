@@ -150,7 +150,7 @@ public class WorkgroupManager {
      * @param workgroupName the name of the workgroup
      * @return the <code>ChatSetting</code> found with the specified key.
      */
-    public ChatSetting getChatSetting(String key, EntityJid workgroupName) {
+    public ChatSetting getChatSetting(String key, EntityBareJid workgroupName) {
         ChatSettings settings = null;
         if (chatSettings.containsKey(workgroupName)) {
             settings = (ChatSettings)chatSettings.get(workgroupName);
@@ -202,7 +202,7 @@ public class WorkgroupManager {
         }
 
 
-        EntityJid workgroupJID = contactItem.getJid().asEntityJidOrThrow();
+        EntityBareJid workgroupJID = contactItem.getJid().asEntityBareJidOrThrow();
         Localpart nameOfWorkgroup = workgroupJID.getLocalpart();
         final JDialog workgroupDialog = new JDialog(SparkManager.getMainWindow(), "Contact " + nameOfWorkgroup + " Workgroup");
         Workgroup workgroup = new Workgroup(workgroupJID, SparkManager.getConnection());
@@ -231,7 +231,7 @@ public class WorkgroupManager {
         submitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (validateForm(workgroupDialog, workgroupForm, formUI.getFilledForm())) {
-                    enterQueue(contactItem.getJid().asEntityJidOrThrow(), formUI.getFilledForm());
+                    enterQueue(contactItem.getJid().asEntityBareJidOrThrow(), formUI.getFilledForm());
                     workgroupDialog.dispose();
                 }
             }
@@ -241,7 +241,7 @@ public class WorkgroupManager {
         formUI.setEnterListener(new WorkgroupDataForm.EnterListener() {
             public void enterPressed() {
                 if (validateForm(workgroupDialog, workgroupForm, formUI.getFilledForm())) {
-                    enterQueue(contactItem.getJid().asEntityJidOrThrow(), formUI.getFilledForm());
+                    enterQueue(contactItem.getJid().asEntityBareJidOrThrow(), formUI.getFilledForm());
                     workgroupDialog.dispose();
                 }
             }
@@ -292,7 +292,7 @@ public class WorkgroupManager {
         }
     }
 
-    private void enterQueue(EntityJid workgroupJID, Form form) {
+    private void enterQueue(EntityBareJid workgroupJID, Form form) {
         Localpart workgroupName = workgroupJID.getLocalpart();
 
         final JDialog workgroupDialog = new JDialog(SparkManager.getMainWindow(), workgroupName + " Workgroup");

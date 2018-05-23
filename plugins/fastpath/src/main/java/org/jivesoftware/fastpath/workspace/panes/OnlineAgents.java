@@ -152,7 +152,7 @@ public final class OnlineAgents extends JPanel {
             return;
         }
         SwingWorker agentWorker = new SwingWorker() {
-            Collection<String> agentSet;
+            Collection<EntityBareJid> agentSet;
 
             public Object construct() {
                 // Initialize Agent Roster
@@ -170,8 +170,7 @@ public final class OnlineAgents extends JPanel {
             }
 
             public void finished() {
-                Set<EntityBareJid> jidAgentSet = JidUtil.entityBareJidSetFrom(agentSet);
-                final List<EntityBareJid> agentList = new ArrayList<>(jidAgentSet);
+                final List<EntityBareJid> agentList = new ArrayList<>(agentSet);
                 Collections.sort(agentList);
 
                 for ( EntityBareJid agent : agentList )
@@ -311,8 +310,7 @@ public final class OnlineAgents extends JPanel {
 
     public class OnlineAgentListener implements AgentRosterListener {
         @Override
-        public void agentAdded(final String agentString) {
-            EntityBareJid agent = JidCreate.entityBareFromOrThrowUnchecked(agentString);
+        public void agentAdded(final EntityBareJid agent) {
             String nickname = SparkManager.getUserManager().getUserNicknameFromJID(agent);
             if (nickname == null) {
                 nickname = agent.toString();
@@ -336,8 +334,7 @@ public final class OnlineAgents extends JPanel {
         }
 
         @Override
-        public void agentRemoved(String agentString) {
-            EntityBareJid jid = JidCreate.entityBareFromOrThrowUnchecked(agentString);
+        public void agentRemoved(EntityBareJid jid) {
             ContactItem item = contactGroup.getContactItemByJID(jid);
             contactGroup.removeContactItem(item);
             contactGroup.fireContactGroupUpdated();

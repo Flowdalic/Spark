@@ -56,6 +56,7 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.workgroup.agent.AgentRoster;
 import org.jivesoftware.smackx.workgroup.agent.AgentRosterListener;
 import org.jivesoftware.smackx.workgroup.packet.AgentStatus;
+import org.jivesoftware.smackx.workgroup.packet.AgentStatus.ChatInfo;
 import org.jivesoftware.spark.SparkManager;
 import org.jivesoftware.spark.UserManager;
 import org.jivesoftware.spark.ui.conferences.ConferenceUtils;
@@ -161,12 +162,15 @@ public final class CurrentActivity extends JPanel {
 
             public void finished() {
                 agentRoster.addListener(new AgentRosterListener() {
-                    public void agentAdded(String jid) {
+                    @Override
+                    public void agentAdded(EntityBareJid jid) {
                     }
 
-                    public void agentRemoved(String jid) {
+                    @Override
+                    public void agentRemoved(EntityBareJid jid) {
                     }
 
+                    @Override
                     public void presenceChanged(Presence presence) {
                         BareJid agentJID = presence.getFrom().asBareJid();
                         AgentStatus agentStatus = (AgentStatus)presence.getExtension("agent-status", "http://jabber.org/protocol/workgroup");
@@ -177,7 +181,7 @@ public final class CurrentActivity extends JPanel {
                         }
 
                         if (agentStatus != null) {
-                            List list = agentStatus.getCurrentChats();
+                            List<ChatInfo> list = agentStatus.getCurrentChats();
 
                             // Add new ones.
                             Iterator iter = list.iterator();

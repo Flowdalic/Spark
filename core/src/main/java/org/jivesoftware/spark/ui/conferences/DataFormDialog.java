@@ -92,7 +92,7 @@ public class DataFormDialog extends JPanel {
                 String label = field.getLabel();
                 FormField.Type type = field.getType();
 
-                List<String> valueList = field.getValues();
+                List<CharSequence> valueList = field.getValues();
 
                 if (type.equals(FormField.Type.bool)) {
                     boolean isSelected;
@@ -103,7 +103,7 @@ public class DataFormDialog extends JPanel {
                     }
                     else
                     {
-                        String o = valueList.get( 0 );
+                        String o = valueList.get( 0 ).toString();
                         isSelected = o.equals( "1" );
                     }
 
@@ -114,14 +114,14 @@ public class DataFormDialog extends JPanel {
                 }
                 else if (type.equals(FormField.Type.text_single) ||
                         type.equals(FormField.Type.jid_single)) {
-                    String value = valueList.get(0);
+                    String value = valueList.get(0).toString();
                     submitForm.setAnswer( variable, value );
                     addField(label, new JTextField(value), variable);
                 }
                 else if (type.equals(FormField.Type.text_multi) ||
                         type.equals(FormField.Type.jid_multi)) {
                     StringBuilder buf = new StringBuilder();
-                    final Iterator<String> iter = valueList.iterator();
+                    final Iterator<CharSequence> iter = valueList.iterator();
                     while (iter.hasNext()) {
                         buf.append( iter.next() );
 
@@ -136,7 +136,7 @@ public class DataFormDialog extends JPanel {
                     String value = null;
                     if ( !valueList.isEmpty() )
                     {
-                        value = valueList.get( 0 );
+                        value = valueList.get( 0 ).toString();
                         submitForm.setAnswer( variable, value );
                     }
                     addField(label, new JPasswordField( value ), variable);
@@ -148,7 +148,7 @@ public class DataFormDialog extends JPanel {
                         box.addItem(value);
                     }
                     if (valueList.size() > 0) {
-                        String defaultValue = valueList.get(0);
+                        String defaultValue = valueList.get(0).toString();
                         box.setSelectedItem(defaultValue);
                         submitForm.setAnswer( variable, valueList );
                     }
@@ -156,7 +156,7 @@ public class DataFormDialog extends JPanel {
                 }
                 else if (type.equals(FormField.Type.list_multi)) {
                     CheckBoxList checkBoxList = new CheckBoxList();
-                    final List<String> values = field.getValues();
+                    final List<CharSequence> values = field.getValues();
                     for ( final Option option : field.getOptions() ) {
                         String optionLabel = option.getLabel();
                         String optionValue = option.getValue();

@@ -31,7 +31,7 @@ public interface Transport {
 
     Icon getInactiveIcon();
 
-    DomainBareJid getServiceName();
+    DomainBareJid getXMPPServiceDomain();
 
     String getName();
 

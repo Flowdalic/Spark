@@ -36,6 +36,7 @@ import org.jivesoftware.spark.util.SwingWorker;
 import org.jivesoftware.spark.util.TaskEngine;
 import org.jivesoftware.spark.util.log.Log;
 import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
@@ -314,7 +315,7 @@ public class FastpathPlugin implements Plugin, ConnectionListener {
                 logoutButton.setVisible(true);
                 joinButton.setVisible(false);
                 comboBox.setVisible(false);
-                Jid workgroup = JidCreate.fromOrThrowUnchecked(comboBox.getSelectedItem() + "@" + getComponentAddress());
+                EntityBareJid workgroup = JidCreate.entityBareFromOrThrowUnchecked(comboBox.getSelectedItem() + "@" + getComponentAddress());
                 if (agentSession != null && agentSession.isOnline()) {
                     try {
                         agentSession.setOnline(false);

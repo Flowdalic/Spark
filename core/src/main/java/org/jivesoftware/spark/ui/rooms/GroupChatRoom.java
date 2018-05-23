@@ -25,7 +25,7 @@ import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
-import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jivesoftware.smackx.delay.packet.DelayInformation;
 import org.jivesoftware.smackx.muc.DefaultParticipantStatusListener;
@@ -681,12 +681,12 @@ public class GroupChatRoom extends ChatRoom
         {
             String errorMessage = "";
 
-            if ( message.getError().getCondition() == XMPPError.Condition.forbidden && message.getSubject() != null )
+            if ( message.getError().getCondition() == StanzaError.Condition.forbidden && message.getSubject() != null )
             {
                 errorMessage = Res.getString( "message.subject.change.error" );
             }
 
-            else if ( message.getError().getCondition() == XMPPError.Condition.forbidden )
+            else if ( message.getError().getCondition() == StanzaError.Condition.forbidden )
             {
                 errorMessage = Res.getString( "message.forbidden.error" );
             }

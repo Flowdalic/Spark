@@ -90,7 +90,7 @@ public final class SessionManager implements ConnectionListener {
     private void discoverItems() {
         ServiceDiscoveryManager disco = ServiceDiscoveryManager.getInstanceFor(SparkManager.getConnection());
         try {
-            discoverItems = disco.discoverItems(SparkManager.getConnection().getServiceName());
+            discoverItems = disco.discoverItems(SparkManager.getConnection().getXMPPServiceDomain());
         }
         catch (XMPPException | SmackException | InterruptedException e) {
             Log.error(e);

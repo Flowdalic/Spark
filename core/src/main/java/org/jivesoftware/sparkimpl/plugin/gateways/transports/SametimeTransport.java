@@ -45,7 +45,7 @@ public class SametimeTransport implements Transport {
     }
 
     @Override
-    public DomainBareJid getServiceName() {
+    public DomainBareJid getXMPPServiceDomain() {
         return serviceName;
     }
 

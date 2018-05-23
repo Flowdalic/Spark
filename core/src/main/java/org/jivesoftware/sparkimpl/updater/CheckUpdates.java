@@ -559,7 +559,7 @@ public class CheckUpdates {
     {
         SparkVersion request = new SparkVersion();
         request.setType(IQ.Type.get);
-        request.setTo("updater." + connection.getServiceName());
+        request.setTo("updater." + connection.getXMPPServiceDomain());
 
         // TODO: This should not use stanza collectors but simply createStanzaCollectorAndSend(IQ).nextResultOrThrow();
         StanzaCollector collector = connection.createStanzaCollector(new IQReplyFilter( request, connection ));

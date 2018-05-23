@@ -159,18 +159,6 @@ public class ChatTranscriptPlugin implements ChatRoomListener {
             public void connectionClosedOnError(Exception e) {
                 persistConversations();
             }
-
-            @Override
-            public void reconnectingIn(int i) {
-            }
-
-            @Override
-            public void reconnectionSuccessful() {
-            }
-
-            @Override
-            public void reconnectionFailed(Exception exception) {
-            }
         });
     }
 

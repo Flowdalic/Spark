@@ -233,8 +233,8 @@ public class UserSearchResults extends JPanel {
      * @return the first value found in the ReportedData.Row
      */
     public String getFirstValue(ReportedData.Row row, String key) {
-        List<String> values = row.getValues( key );
-        return values == null || values.isEmpty() ? null : values.get( 0 );
+        List<CharSequence> values = row.getValues( key );
+        return values == null || values.isEmpty() ? null : values.get( 0 ).toString();
     }
 
     private void openChatRoom(int row) {

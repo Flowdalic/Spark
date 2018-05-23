@@ -59,6 +59,7 @@ import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
+import org.minidns.dnsname.DnsName;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -276,7 +277,7 @@ public class LoginDialog {
             TLSUtils.disableHostnameVerificationForTlsCertificates(builder);
         }
         if ( localPref.isDebuggerEnabled()) {
-            builder.setDebuggerEnabled( true );
+            builder.enableDefaultDebugger();
         }
 
         if ( hostPortConfigured ) {
@@ -311,7 +312,8 @@ public class LoginDialog {
                 // SMACK 4.1.9 does not support XEP-0368, and does not apply a port change, if the host is not changed too.
                 // Here, we force the host to be set (by doing a DNS lookup), and force the port to 5223 (which is the
                 // default 'old-style' SSL port).
-                builder.setHost( DNSUtil.resolveXMPPServiceDomain( loginServer, null, DnssecMode.disabled ).get( 0 ).getFQDN() );
+                DnsName serverNameDnsName = DnsName.from(loginServer);
+                builder.setHost( DNSUtil.resolveXMPPServiceDomain( serverNameDnsName, null, DnssecMode.disabled ).get( 0 ).getFQDN() );
                 builder.setPort( 5223 );
             }
             SparkSSLContext.Options options;
@@ -1180,7 +1182,7 @@ public class LoginDialog {
                 }
 
                 final SessionManager sessionManager = SparkManager.getSessionManager();
-                sessionManager.setServerAddress( connection.getServiceName() );
+                sessionManager.setServerAddress( connection.getXMPPServiceDomain() );
                 sessionManager.initializeSession( connection, getLoginUsername(), getLoginPassword() );
                 sessionManager.setJID( connection.getUser() );
 
@@ -1220,7 +1222,7 @@ public class LoginDialog {
                 {
                     errorMessage = Res.getString( "message.cert.verification.failed" );
                 }
-                else if ( xee.getMessage() != null && xee.getMessage().contains( "XMPPError: conflict" ) )
+                else if ( xee.getMessage() != null && xee.getMessage().contains( "StanzaError: conflict" ) )
                 {
                     errorMessage = Res.getString( "label.conflict.error" );
                 }

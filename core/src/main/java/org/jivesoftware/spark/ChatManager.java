@@ -18,12 +18,12 @@ package org.jivesoftware.spark;
 import org.jivesoftware.resource.SparkRes;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.chat.Chat;
-import org.jivesoftware.smack.chat.ChatManagerListener;
+import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jivesoftware.smackx.chatstates.ChatStateListener;
+import org.jivesoftware.smackx.chatstates.ChatStateManager;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.xdata.Form;
@@ -63,7 +63,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Handles the Chat Management of each individual <code>Workspace</code>. The ChatManager is responsible
  * for creation and removal of chat rooms, transcripts, and transfers and room invitations.
  */
-public class ChatManager implements ChatManagerListener {
+public class ChatManager {
 
     private static ChatManager singleton;
     private static final Object LOCK = new Object();
@@ -107,7 +107,7 @@ public class ChatManager implements ChatManagerListener {
      * The listener instance that we use to track chat states according to
      * XEP-0085;
      */
-    private SmackChatStateListener smackChatStateListener = null;    
+    private SmackChatStateListener smackChatStateListener = new SmackChatStateListener();
 
     /**
      * Returns the singleton instance of <CODE>ChatManager</CODE>,
@@ -139,7 +139,8 @@ public class ChatManager implements ChatManagerListener {
         // Add Default Chat Room Decorator
         addSparkTabHandler(new DefaultTabHandler());
         // Add a Message Handler
-        org.jivesoftware.smack.chat.ChatManager.getInstanceFor( SparkManager.getConnection() ).addChatListener(this);
+        ChatStateManager chatStateManager = ChatStateManager.getInstance(SparkManager.getConnection());
+        chatStateManager.addChatStateListener(smackChatStateListener);
     }
 
 
@@ -967,14 +968,6 @@ public class ChatManager implements ChatManagerListener {
 	}
     }
 
-	@Override
-	public void chatCreated(Chat chat, boolean isLocal) {
-        if(smackChatStateListener == null) {
-            smackChatStateListener = new SmackChatStateListener();
-        }        
-        chat.addMessageListener(smackChatStateListener);		
-	}
-	
     /**
      * The listener that we use to track chat state notifications according
      * to XEP-0085.
@@ -988,7 +981,7 @@ public class ChatManager implements ChatManagerListener {
          */
     	@Override
         public void stateChanged(Chat chat, ChatState state, Message message) {
-    	    Jid participant = chat.getParticipant();
+    	    Jid participant = chat.getXmppAddressOfChatPartner();
             if (ChatState.composing.equals(state)) {
                 composingNotification(participant);
             } else {
@@ -996,10 +989,5 @@ public class ChatManager implements ChatManagerListener {
             }
             
         }
-
-		@Override
-		public void processMessage(Chat arg0, Message arg1) {			
-			// TODO Auto-generated method stub			
-		}
-    }    	
+    }
 }

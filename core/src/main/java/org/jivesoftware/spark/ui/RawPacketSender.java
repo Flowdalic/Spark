@@ -100,7 +100,7 @@ public class RawPacketSender implements ActionListener {
 	    Stanza stanza = new Stanza() {
 
 		@Override
-		public String toXML() {
+		public String toXML(String enclosingNamespace) {
 		    return _inputarea.getText();
 		}
 

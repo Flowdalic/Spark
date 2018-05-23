@@ -176,13 +176,16 @@ public final class AgentConversations extends JPanel implements ChangeListener {
 
                 public void finished() {
                     agentRoster.addListener(new AgentRosterListener() {
-                        public void agentAdded(String jid) {
+                        @Override
+                        public void agentAdded(EntityBareJid jid) {
                         }
 
-                        public void agentRemoved(String jid) {
+                        @Override
+                        public void agentRemoved(EntityBareJid jid) {
 
                         }
 
+                        @Override
                         public void presenceChanged(Presence presence) {
                             EntityBareJid agentJID = presence.getFrom().asEntityBareJidOrThrow();
                             AgentStatus agentStatus = (AgentStatus)presence.getExtension("agent-status", "http://jabber.org/protocol/workgroup");
@@ -236,10 +239,7 @@ public final class AgentConversations extends JPanel implements ChangeListener {
     private void calculateNumberOfChats(AgentRoster agentRoster) {
         int counter = 0;
         // TODO: CHECK FASTPATH
-        //for (String agent : agentRoster.getAgents()) {
-        for (Iterator<String> it = agentRoster.getAgents().iterator(); it.hasNext();) {
-            String agentString = it.next();
-            EntityBareJid agent = JidCreate.entityBareFromOrThrowUnchecked(agentString);
+        for (EntityBareJid agent : agentRoster.getAgents()) {
             Presence presence = agentRoster.getPresence(agent);
             if (presence.isAvailable()) {
                 AgentStatus agentStatus = (AgentStatus)presence.getExtension("agent-status", "http://jabber.org/protocol/workgroup");

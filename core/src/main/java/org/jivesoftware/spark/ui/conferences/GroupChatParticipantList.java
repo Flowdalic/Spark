@@ -59,7 +59,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.muc.*;
 import org.jivesoftware.smackx.disco.packet.DiscoverInfo;
@@ -198,7 +198,7 @@ public class GroupChatParticipantList extends JPanel {
 if (p.getError() != null) {
 if (p.getError()
 .getCondition()
-.equals(XMPPError.Condition.conflict
+.equals(StanzaError.Condition.conflict
 .toString())) {
 return;
 }
@@ -697,7 +697,7 @@ groupChatRoom.notifySettingsAccessRight();
 				    chat.changeNickname(Resourcepart.from(newNickname));
 				    break;
 				} catch (XMPPException | SmackException | XmppStringprepException | InterruptedException e1) {
-					if ( e1 instanceof XMPPException.XMPPErrorException && (( XMPPException.XMPPErrorException ) e1).getXMPPError().getCondition() == XMPPError.Condition.not_acceptable )
+					if ( e1 instanceof XMPPException.XMPPErrorException && (( XMPPException.XMPPErrorException ) e1).getXMPPError().getCondition() == StanzaError.Condition.not_acceptable )
 					{
 						// handle deny changing nick.
 				    UIManager.put("OptionPane.okButtonText", Res.getString("ok"));

@@ -44,7 +44,7 @@ public class MySpaceTransport implements Transport {
         return SparkRes.getImageIcon(SparkRes.MYSPACE_TRANSPORT_INACTIVE_IMAGE);
     }
 
-    public DomainBareJid getServiceName() {
+    public DomainBareJid getXMPPServiceDomain() {
         return serviceName;
     }
 

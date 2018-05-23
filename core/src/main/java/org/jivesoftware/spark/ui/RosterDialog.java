@@ -228,7 +228,7 @@ public class RosterDialog implements ActionListener {
                     // This is not a transport.
                     String fullJID = getJID();
                     if ( !fullJID.contains( "@" ) ) {
-                        fullJID = fullJID + "@" + SparkManager.getConnection().getServiceName();
+                        fullJID = fullJID + "@" + SparkManager.getConnection().getXMPPServiceDomain();
                     }
 
                     if ( !fullJID.isEmpty() && !fullJID.startsWith( "@" ))
@@ -378,7 +378,7 @@ public class RosterDialog implements ActionListener {
         if (transport == null) {
             String jid = getJID();
             if ( !jid.contains( "@" ) ) {
-                jid = jid + "@" + SparkManager.getConnection().getServiceName();
+                jid = jid + "@" + SparkManager.getConnection().getXMPPServiceDomain();
             }
             String nickname = nicknameField.getText();
             String group = (String)groupBox.getSelectedItem();
@@ -398,7 +398,7 @@ public class RosterDialog implements ActionListener {
         else {
             String jid = getJID();
             try {
-                jid = Gateway.getJID(transport.getServiceName(), jid);
+                jid = Gateway.getJID(transport.getXMPPServiceDomain(), jid);
             }
             catch (SmackException | InterruptedException e) {
                 Log.error(e);
@@ -504,7 +504,7 @@ public class RosterDialog implements ActionListener {
 		for (ReportedData.Row row : data.getRows() ) {
 		    if (!row.getValues(columnnames.get(0)).isEmpty()) {
 			String s = row.getValues(columnnames.get(0))
-				.get(0);
+				.get(0).toString();
 			final JMenuItem item = new JMenuItem(s);
 			popup.add(item);
 			item.addActionListener( e -> {
@@ -629,11 +629,11 @@ public class RosterDialog implements ActionListener {
 	if (transport == null) {
 	    if (!contact.contains("@")) {
 		contact = contact + "@"
-			+ SparkManager.getConnection().getServiceName();
+			+ SparkManager.getConnection().getXMPPServiceDomain();
 	    }
 	} else {
 	    if (!contact.contains("@")) {
-		contact = contact + "@" + transport.getServiceName();
+		contact = contact + "@" + transport.getXMPPServiceDomain();
 	    }
 	}
 

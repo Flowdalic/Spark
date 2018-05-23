@@ -468,7 +468,7 @@ public class ChatRoomImpl extends ChatRoom {
                     fireReceivingIncomingMessage( message );
                     if ( message.getError() != null )
                     {
-                        if ( message.getError().getCondition() == XMPPError.Condition.item_not_found )
+                        if ( message.getError().getCondition() == StanzaError.Condition.item_not_found )
                         {
                             // Check to see if the user is online to recieve this message.
                             RosterEntry entry = roster.getEntry( participantJID.asBareJid() );

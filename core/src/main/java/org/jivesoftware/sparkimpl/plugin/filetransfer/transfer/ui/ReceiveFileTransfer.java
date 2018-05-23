@@ -299,7 +299,7 @@ public class ReceiveFileTransfer extends JPanel {
 	
 	try {
 	    _starttime = System.currentTimeMillis();
-            transfer.recieveFile(downloadedFile);
+            transfer.receiveFile(downloadedFile);
         }
         catch (SmackException | IOException e) {
             Log.error(e);

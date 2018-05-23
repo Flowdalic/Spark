@@ -26,7 +26,7 @@ import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jivesoftware.smackx.vcardtemp.provider.VCardProvider;
@@ -383,7 +383,8 @@ public class VCardManager {
 			}
 		}
 		catch (Exception e) {
-			personalVCard.setError(new XMPPError(XMPPError.Condition.conflict));
+            StanzaError.Builder errorBuilder = StanzaError.getBuilder(StanzaError.Condition.conflict);
+			personalVCard.setError(errorBuilder);
             personalVCardAvatar = null;
             personalVCardHash = null;
 			Log.error(e);
@@ -518,12 +519,13 @@ public class VCardManager {
         }
         catch (XMPPException | SmackException | InterruptedException e) {
         	////System.out.println(jid+" Fehler in reloadVCard ----> null");
-        	vcard.setError(new XMPPError(XMPPError.Condition.resource_constraint));
+            StanzaError.Builder errorBuilder = StanzaError.getBuilder(StanzaError.Condition.resource_constraint);
+        	vcard.setError(errorBuilder);
         	vcard.setJabberId(jid.toString());
         	delayedContacts.add(jid.toString());
         	return vcard;
         	//We dont want cards with error
-           // vcard.setError(new XMPPError(XMPPError.Condition.request_timeout));
+           // vcard.setError(new StanzaError(XMPPError.Condition.request_timeout));
            //addVCard(jid, vcard);
         }
 

@@ -98,7 +98,7 @@ public class PrivacyManager {
     	ServiceDiscoveryManager servDisc = ServiceDiscoveryManager.getInstanceFor(conn);
         DiscoverInfo info = null;
     	try {
-    		info = servDisc.discoverInfo(conn.getServiceName());
+    		info = servDisc.discoverInfo(conn.getXMPPServiceDomain());
         } catch (XMPPException | SmackException | InterruptedException e) {
             	// We could not query the server
         }
