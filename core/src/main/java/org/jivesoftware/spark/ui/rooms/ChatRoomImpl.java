@@ -110,7 +110,7 @@ public class ChatRoomImpl extends ChatRoom {
     
     private JComponent chatStatePanel;    
 
-    public ChatRoomImpl(final EntityBareJid participantJID, Resourcepart participantNickname, CharSequence title) {
+    public ChatRoomImpl(final EntityJid participantJID, Resourcepart participantNickname, CharSequence title) {
         this(participantJID, participantNickname, title, true);
     }
 
@@ -221,6 +221,7 @@ public class ChatRoomImpl extends ChatRoom {
             return;
         }
         participantJID = jid.asEntityJidOrThrow();
+        roomname = participantJID.asEntityBareJid();
     }
 
     /**

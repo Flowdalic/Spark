@@ -90,7 +90,7 @@ public class UriManager {
 	}
 
 	ChatManager chatManager = SparkManager.getChatManager();
-	ChatRoom chatRoom = chatManager.createChatRoom(jid.asBareJid(), nickname, nickname);
+	ChatRoom chatRoom = chatManager.createChatRoom(jid.asEntityJidOrThrow(), nickname, nickname);
 	if (body != null) {
 	    Message message = new Message();
 	    message.setBody(body);

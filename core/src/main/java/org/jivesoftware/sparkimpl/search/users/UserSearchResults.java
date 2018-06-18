@@ -239,8 +239,8 @@ public class UserSearchResults extends JPanel {
 
     private void openChatRoom(int row) {
         String jidString = (String)resultsTable.getValueAt(row, 0);
-        BareJid jid = JidCreate.bareFromOrThrowUnchecked(jidString);
-        Localpart nickname = jid.getLocalpartOrNull();
+        EntityBareJid jid = JidCreate.entityBareFromOrThrowUnchecked(jidString);
+        Localpart nickname = jid.getLocalpart();
 
         TableColumn column;
         try {

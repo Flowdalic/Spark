@@ -40,7 +40,9 @@ import org.jivesoftware.spark.ui.status.StatusBar;
 import org.jivesoftware.spark.ui.themes.ThemePanel;
 import org.jivesoftware.spark.util.log.Log;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityJid;
 import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
 
 /**
  * This is a registry for components that may be replaced by plugins. Also
@@ -436,7 +438,7 @@ public final class UIComponentRegistry {
      *
      * @return A new instance of the class currently registered as chat room.
      */
-    public static ChatRoom createChatRoom(String participantJID, String participantNickname, String title) {
+    public static ChatRoom createChatRoom(EntityJid participantJID, Resourcepart participantNickname, CharSequence title) {
         return instantiate(chatRoomClass, participantJID, participantNickname, title);
     }
 

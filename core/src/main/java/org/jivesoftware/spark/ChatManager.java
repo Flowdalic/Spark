@@ -44,6 +44,7 @@ import org.jivesoftware.sparkimpl.settings.local.SettingsManager;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
@@ -213,17 +214,18 @@ public class ChatManager {
      * Creates and/or opens a chat room with the specified user.
      *
      * @param userJID  the jid of the user to chat with.
-     * @param nickname the nickname to use for the user.
+     * @param nicknameCs the nickname to use for the user.
      * @param title    the title to use for the room.
      * @return the newly created <code>ChatRoom</code>.
      */
-    public ChatRoom createChatRoom(BareJid userJID, CharSequence nickname, CharSequence title) {
+    public ChatRoom createChatRoom(EntityJid userJID, CharSequence nicknameCs, CharSequence title) {
+        Resourcepart nickname = Resourcepart.fromOrThrowUnchecked(nicknameCs);
         ChatRoom chatRoom;
         try {
             chatRoom = getChatContainer().getChatRoom(userJID);
         }
         catch (ChatRoomNotFoundException e) {
-            chatRoom = UIComponentRegistry.createChatRoom(userJID.toString(), nickname.toString(), title.toString());
+            chatRoom = UIComponentRegistry.createChatRoom(userJID, nickname, title);
             getChatContainer().addChatRoom(chatRoom);
         }
 
@@ -256,20 +258,25 @@ public class ChatManager {
      * @param jid the jid of the user to chat with.
      * @return the ChatRoom.
      */
-    public ChatRoom getChatRoom(BareJid jid) {
+    public ChatRoom getChatRoom(BareJid bareJid) {
+        // TODO: Change signature of method to use EntityBareJid.
+        EntityBareJid jid = bareJid.asEntityBareJidOrThrow();
         ChatRoom chatRoom;
         try {
             chatRoom = getChatContainer().getChatRoom(jid);
         }
         catch (ChatRoomNotFoundException e) {
             ContactList contactList = SparkManager.getWorkspace().getContactList();
-            ContactItem item = contactList.getContactItemByJID(jid.toString());
+            ContactItem item = contactList.getContactItemByJID(jid);
             if (item != null) {
-                String nickname = item.getDisplayName();
-                chatRoom = UIComponentRegistry.createChatRoom(jid.toString(), nickname, nickname);
+                String nicknameString = item.getDisplayName();
+                Resourcepart nickname = Resourcepart.fromOrThrowUnchecked(nicknameString);
+                chatRoom = UIComponentRegistry.createChatRoom(jid, nickname, nickname);
             }
             else {
-                chatRoom = UIComponentRegistry.createChatRoom(jid.toString(), jid.toString(), jid.toString());
+                // TODO Better nickname?
+                Resourcepart nickname = Resourcepart.EMPTY;
+                chatRoom = UIComponentRegistry.createChatRoom(jid, nickname, jid);
             }
 
 
@@ -337,10 +344,9 @@ public class ChatManager {
      * @param jid      the jid of the user to chat with.
      * @param nickname the nickname of the user.
      */
-    public void activateChat(final CharSequence jid, final String nickname) {
-        if (!ModelUtil.hasLength(jid)) {
-            return;
-        }
+    public void activateChat(final CharSequence jidCs, final String nicknameString) {
+        final Resourcepart nickname = Resourcepart.fromOrThrowUnchecked(nicknameString);
+        final EntityBareJid jid = JidCreate.entityBareFromUnescapedOrThrowUnchecked(jidCs);
 
         SwingWorker worker = new SwingWorker() {
             final ChatManager chatManager = SparkManager.getChatManager();
@@ -367,7 +373,7 @@ public class ChatManager {
 
             public void finished() {
                 if (chatRoom == null) {
-                    chatRoom = UIComponentRegistry.createChatRoom(jid.toString(), nickname, nickname);
+                    chatRoom = UIComponentRegistry.createChatRoom(jid, nickname, nickname);
                     chatManager.getChatContainer().addChatRoom(chatRoom);
                 }
                 chatManager.getChatContainer().activateChatRoom(chatRoom);
@@ -917,7 +923,7 @@ public class ChatManager {
 	String query = uri.getQuery();
 	if (query == null) {
 	    // No query string, so assume the URI is xmpp:JID
-	    BareJid jid = _uriManager.retrieveJID(uri).asBareJid();
+	    EntityBareJid jid = _uriManager.retrieveJID(uri).asEntityBareJidOrThrow();
 
 	    UserManager userManager = SparkManager.getUserManager();
 	    String nickname = userManager.getUserNicknameFromJID(jid);

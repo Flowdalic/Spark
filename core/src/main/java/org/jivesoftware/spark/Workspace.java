@@ -68,6 +68,7 @@ import org.jivesoftware.sparkimpl.plugin.gateways.GatewayPlugin;
 import org.jivesoftware.sparkimpl.plugin.manager.Enterprise;
 import org.jivesoftware.sparkimpl.plugin.transcripts.ChatTranscriptPlugin;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.util.XmppStringUtils;
@@ -374,7 +375,10 @@ public class Workspace extends JPanel implements StanzaListener {
 
             // Check for non-existent rooms.
             if (room == null) {
-                createOneToOneRoom(bareJID, message);
+                EntityBareJid entityBareJid = bareJID.asEntityBareJidIfPossible();
+                if (entityBareJid != null) {
+                    createOneToOneRoom(entityBareJid, message);
+                }
             }
         }
     }
@@ -391,7 +395,7 @@ public class Workspace extends JPanel implements StanzaListener {
             return;
         }
 
-        BareJid bareJID = message.getFrom().asBareJid();
+        EntityBareJid bareJID = message.getFrom().asEntityBareJidOrThrow();
         ContactItem contact = contactList.getContactItemByJID(bareJID);
         Localpart nickname = bareJID.getLocalpartOrNull();
         if (contact != null) {
@@ -420,7 +424,7 @@ public class Workspace extends JPanel implements StanzaListener {
      * @param bareJID the bareJID of the anonymous user.
      * @param message the message from the anonymous user.
      */
-    private void createOneToOneRoom(BareJid bareJID, Message message) {
+    private void createOneToOneRoom(EntityBareJid bareJID, Message message) {
         ContactItem contact = contactList.getContactItemByJID(bareJID);
         Localpart localpart = bareJID.getLocalpartOrNull();
         String nickname = null;
