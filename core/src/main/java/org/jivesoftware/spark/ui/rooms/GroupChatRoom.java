@@ -714,7 +714,11 @@ public class GroupChatRoom extends ChatRoom
             return;
         }
 
-        final EntityFullJid from = presence.getFrom().asEntityFullJidOrThrow();
+        final EntityFullJid from = presence.getFrom().asEntityFullJidIfPossible();
+        if (from == null) {
+           return;
+        }
+
         final Resourcepart nickname = from.getResourcepart();
 
         final MUCUser mucUser = stanza.getExtension( "x", "http://jabber.org/protocol/muc#user" );
