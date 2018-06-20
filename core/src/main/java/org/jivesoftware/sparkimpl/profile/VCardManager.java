@@ -21,11 +21,13 @@ import org.jivesoftware.resource.SparkRes;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.filter.AndFilter;
 import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
@@ -41,6 +43,7 @@ import org.jivesoftware.sparkimpl.profile.ext.JabberAvatarExtension;
 import org.jivesoftware.sparkimpl.profile.ext.VCardUpdateExtension;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppStringUtils;
@@ -192,8 +195,14 @@ public class VCardManager {
         };
 
         TaskEngine.getInstance().submit(queueListener);
-        
-        StanzaFilter filter = new StanzaTypeFilter(VCard.class);
+
+        StanzaFilter filter = new AndFilter(new StanzaFilter() {
+            @Override
+            public boolean accept(Stanza stanza) {
+                Jid from = stanza.getFrom();
+                return from != null;
+            }
+        }, new StanzaTypeFilter(VCard.class));
         StanzaListener myListener = stanza -> {
             if (stanza instanceof VCard)
             {
