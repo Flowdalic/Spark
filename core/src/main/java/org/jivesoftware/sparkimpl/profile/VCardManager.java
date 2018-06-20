@@ -77,7 +77,7 @@ public class VCardManager {
 
     private Map<BareJid, VCard> vcards = Collections.synchronizedMap( new HashMap<>());
 
-    private Set<String> delayedContacts = Collections.synchronizedSet( new HashSet<>());
+    private Set<BareJid> delayedContacts = Collections.synchronizedSet( new HashSet<>());
     
     private boolean vcardLoaded;
 
@@ -208,7 +208,7 @@ public class VCardManager {
             {
                 VCard VCardpacket = (VCard)stanza;
                 BareJid jid = VCardpacket.getFrom().asBareJid();
-                if (VCardpacket.getType().equals(IQ.Type.result) && jid != null && delayedContacts.contains(jid))
+                if (VCardpacket.getType().equals(IQ.Type.result) && delayedContacts.contains(jid))
                 {
                     delayedContacts.remove(jid);
                     addVCard(jid, VCardpacket);
@@ -531,7 +531,7 @@ public class VCardManager {
             StanzaError.Builder errorBuilder = StanzaError.getBuilder(StanzaError.Condition.resource_constraint);
         	vcard.setError(errorBuilder);
         	vcard.setJabberId(jid.toString());
-        	delayedContacts.add(jid.toString());
+            delayedContacts.add(jid);
         	return vcard;
         	//We dont want cards with error
            // vcard.setError(new StanzaError(XMPPError.Condition.request_timeout));
