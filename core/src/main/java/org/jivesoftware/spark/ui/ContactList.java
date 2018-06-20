@@ -21,9 +21,12 @@ import org.jivesoftware.resource.Default;
 import org.jivesoftware.resource.Res;
 import org.jivesoftware.resource.SparkRes;
 import org.jivesoftware.smack.*;
+import org.jivesoftware.smack.XMPPException.XMPPErrorException;
 import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.StanzaError;
+import org.jivesoftware.smack.packet.StanzaError.Condition;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterGroup;
@@ -1761,14 +1764,20 @@ moveToOffline(moveToOfflineContactItem);
         // Hide top toolbar
         SparkManager.getMainWindow().getTopToolBar().setVisible(false);
 
-        final Runnable sharedGroupLoader = () -> {
-// Retrieve shared group list.
-try {
-sharedGroups = SharedGroupManager.getSharedGroups(SparkManager.getConnection());
-}
-catch (XMPPException | SmackException | InterruptedException e) {
-Log.error("Unable to contact shared group info.", e);
-}
+		final Runnable sharedGroupLoader = () -> {
+			// Retrieve shared group list.
+			try {
+				sharedGroups = SharedGroupManager.getSharedGroups(SparkManager.getConnection());
+			} catch (XMPPErrorException e) {
+				StanzaError stanzaError = e.getXMPPError();
+				if (stanzaError.getCondition() == Condition.service_unavailable) {
+					// Server does not support shared groups.
+					return;
+				}
+				Log.error("Unable to contact shared group info.", e);
+			} catch (SmackException | InterruptedException e) {
+				Log.error("Unable to contact shared group info.", e);
+			}
 
 SwingUtilities.invokeLater( () -> loadContactList() );
 

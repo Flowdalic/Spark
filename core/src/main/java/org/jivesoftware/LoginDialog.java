@@ -353,7 +353,7 @@ public class LoginDialog {
         SASLAuthentication.unregisterSASLMechanism( SASLGSSAPIv3CompatMechanism.class.getName() );
 
         // Add the mechanism only when SSO is enabled (which allows us to register the correct one).
-        if ( securityMode != ConnectionConfiguration.SecurityMode.disabled && localPref.isSSOEnabled() )
+        if ( localPref.isSSOEnabled() )
         {
             // SPARK-1740: Register a mechanism that's compatible with Smack 3, when requested.
             if ( localPref.isSaslGssapiSmack3Compatible() )
