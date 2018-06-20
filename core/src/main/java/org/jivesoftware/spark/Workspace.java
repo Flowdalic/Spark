@@ -395,7 +395,10 @@ public class Workspace extends JPanel implements StanzaListener {
             return;
         }
 
-        EntityBareJid bareJID = message.getFrom().asEntityBareJidOrThrow();
+        EntityBareJid bareJID = message.getFrom().asEntityBareJidIfPossible();
+        if (bareJID == null) {
+            return;
+        }
         ContactItem contact = contactList.getContactItemByJID(bareJID);
         Localpart nickname = bareJID.getLocalpartOrNull();
         if (contact != null) {
